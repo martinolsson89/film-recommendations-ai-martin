@@ -1,0 +1,17 @@
+.dark .skeleton-poster,
+.dark .skeleton-title,
+.dark .skeleton-year {
+    background: #4b5563;
+}
+
+/* Responsive skeleton design - Mobile only overrides */
+@media (max-width: 640px) {
+    .skeleton-card { 
+        min-width: 160px; 
+    }
+    .skeleton-poster { 
+        height: auto !important;
+        aspect-ratio: 2/3 !important;
+        min-height: 280px !important;
+    }
+}
