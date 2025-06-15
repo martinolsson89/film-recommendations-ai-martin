@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Identity;
 using FilmRecomendations.Db.DbModels;
 using Microsoft.AspNetCore.Authorization;
 using FilmRecomendations.Models.DTOs;
+using FilmRecomendations.Db.Services;
+using System.Security.Claims;
 namespace FilmRecomendations.WebApi.Controllers;
 
 [ApiController]
@@ -15,20 +17,20 @@ public class FilmRecomendationsController : ControllerBase
     private readonly IAiService _aiService;
     private readonly ITMDBService _tmdbService;
     private readonly IMovieRepo _movieRepo;
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IUserService _userService;
 
     public FilmRecomendationsController(
         ILogger<FilmRecomendationsController> logger,
         IAiService aiService,
         ITMDBService tmdbService,
         IMovieRepo movieRepo,
-        UserManager<ApplicationUser> userManager)
+        IUserService userService)
     {
         _logger = logger;
         _aiService = aiService;
         _tmdbService = tmdbService;
         _movieRepo = movieRepo;
-        _userManager = userManager;
+        _userService = userService;
     }
 
     [Authorize]
@@ -38,23 +40,39 @@ public class FilmRecomendationsController : ControllerBase
         var movies = new List<MovieGetDto>();
         try
         {
-            if (User is not null && _userManager.GetUserId(User) is not null)
+            // Get user ID from JWT token claims
+            var userId = GetCurrentUserId();
+            if (!string.IsNullOrEmpty(userId))
             {
-                var userId = _userManager.GetUserId(User);
-                movies = await _movieRepo.GetMoviesAsync(userId!);
+                // Verify user exists and get their movies
+                var user = await _userService.FindByIdAsync(userId);
+                if (user != null)
+                {
+                    movies = await _movieRepo.GetMoviesAsync(userId);
+                    _logger.LogInformation($"Retrieved {movies.Count} movies for user {user.Email}");
+                }
+                else
+                {
+                    _logger.LogWarning($"User with ID {userId} not found in database");
+                }
             }
-
+            else
+            {
+                _logger.LogWarning("No user ID found in JWT token");
+                return Unauthorized("Invalid or missing user authentication");
+            }
 
             if (string.IsNullOrWhiteSpace(prompt))
             {
                 return BadRequest("Prompt is required");
             }
+
             var recommendationsJson = await _aiService.GetMovieRecommendationsAsync(prompt, movies);
             return Content(recommendationsJson, "application/json");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching movie recommendations.");
+            _logger.LogError(ex, "Error fetching movie recommendations for user {UserId}", GetCurrentUserId());
             return StatusCode(500, "An error occurred while fetching recommendations.");
         }
     }
@@ -75,12 +93,12 @@ public class FilmRecomendationsController : ControllerBase
             }
 
             var movieIdResponse = await _tmdbService.GetMovieIdAsync(movieName, releaseYear);
-            
+
             if (movieIdResponse.Id <= 0)
             {
                 return NotFound($"Movie not found: {movieName} ({releaseYear})");
             }
-            
+
             return Ok(movieIdResponse);
         }
         catch (Exception ex)
@@ -102,12 +120,12 @@ public class FilmRecomendationsController : ControllerBase
             }
 
             var movieDetails = await _tmdbService.GetMovieDetailsAsync(movieId);
-            
+
             if (movieDetails == null)
             {
                 return NotFound($"Movie details not found for ID: {movieId}");
             }
-            
+
             return Ok(movieDetails);
         }
         catch (Exception ex)
@@ -128,12 +146,12 @@ public class FilmRecomendationsController : ControllerBase
             }
 
             var trailers = await _tmdbService.GetMovieTrailersAsync(movieId);
-            
+
             if (trailers.Count == 0)
             {
                 return NotFound($"No trailers found for movie ID: {movieId}");
             }
-            
+
             return Ok(trailers);
         }
         catch (Exception ex)
@@ -142,7 +160,7 @@ public class FilmRecomendationsController : ControllerBase
             return StatusCode(500, "An error occurred while fetching movie trailers.");
         }
     }
-    
+
     // Add new endpoint for getting streaming providers
     [HttpGet("GetStreamingProviders/{movieId}")]
     public async Task<IActionResult> GetStreamingProviders(int movieId)
@@ -155,7 +173,7 @@ public class FilmRecomendationsController : ControllerBase
             }
 
             var streamingProviders = await _tmdbService.GetStreamingProvidersAsync(movieId);
-            
+
             return Ok(streamingProviders);
         }
         catch (Exception ex)
@@ -180,7 +198,7 @@ public class FilmRecomendationsController : ControllerBase
             {
                 return NotFound($"No directors found for movie ID: {movieId}");
             }
-            
+
             return Ok(directors);
         }
         catch (Exception ex)
@@ -205,7 +223,7 @@ public class FilmRecomendationsController : ControllerBase
             {
                 return NotFound($"No actors found for movie ID: {movieId}");
             }
-            
+
             return Ok(actors);
         }
         catch (Exception ex)
@@ -226,12 +244,12 @@ public class FilmRecomendationsController : ControllerBase
             }
 
             var actorDetails = await _tmdbService.GetActorDetailsAsync(actorId);
-            
+
             if (actorDetails == null)
             {
                 return NotFound($"No details found for actor ID: {actorId}");
             }
-            
+
             return Ok(actorDetails);
         }
         catch (Exception ex)
@@ -240,7 +258,7 @@ public class FilmRecomendationsController : ControllerBase
             return StatusCode(500, "An error occurred while fetching actor details.");
         }
     }
-    
+
     [HttpGet("GetSummarizedActorDetails/{actorId}")]
     public async Task<IActionResult> GetSummarizedActorDetails(int actorId)
     {
@@ -253,27 +271,27 @@ public class FilmRecomendationsController : ControllerBase
 
             // First get the full actor details from TMDB
             var actorDetails = await _tmdbService.GetActorDetailsAsync(actorId);
-            
+
             if (actorDetails == null)
             {
                 return NotFound($"No details found for actor ID: {actorId}");
             }
-            
+
             // If there's a biography to summarize, generate a summary
-            if (!string.IsNullOrWhiteSpace(actorDetails.Biography) && 
+            if (!string.IsNullOrWhiteSpace(actorDetails.Biography) &&
                 actorDetails.Biography != "No biography available.")
             {
                 _logger.LogInformation($"Requesting summary for actor {actorDetails.Name} (ID: {actorId})");
-                
+
                 // Get the AI-generated summary
                 string summarizedBiography = await _aiService.GetActorBiographySummaryAsync(
-                    actorDetails.Biography, 
+                    actorDetails.Biography,
                     actorDetails.Name);
-                
+
                 // Replace the original biography with the summary
                 actorDetails.Biography = summarizedBiography;
             }
-            
+
             return Ok(actorDetails);
         }
         catch (Exception ex)
@@ -281,5 +299,15 @@ public class FilmRecomendationsController : ControllerBase
             _logger.LogError(ex, "Error fetching summarized actor details.");
             return StatusCode(500, "An error occurred while fetching summarized actor details.");
         }
+    }
+
+    private string? GetCurrentUserId()
+    {
+        return User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    }
+    
+    private string? GetCurrentUserEmail()
+    {
+        return User?.FindFirst(ClaimTypes.Email)?.Value;
     }
 }

@@ -1,14 +1,17 @@
 using FilmRecomendations.Services;
-
 using FilmRecomendations.Db;
 using FilmRecomendations.Db.DbModels;
+using FilmRecomendations.Db.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Threading.RateLimiting;
 using FilmRecomendations.Db.Repos;
 using Microsoft.Extensions.FileProviders;
+using MongoDB.Driver;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,23 +58,90 @@ builder.Services.AddSwaggerGen(options => {
     });
 });
 
-//dbservice
-builder.Services.AddDbContext<FilmDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("FilmConnectionString")));
+//dbservice - MongoDB Configuration
+builder.Services.Configure<MongoSettings>(builder.Configuration.GetSection("MongoDB"));
 
-//identity
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-        .AddEntityFrameworkStores<FilmDbContext>()
-        .AddDefaultTokenProviders();
+builder.Services.AddSingleton<IMongoClient>(sp => {
+    var settings = sp.GetRequiredService<IOptions<MongoSettings>>().Value;
+    return new MongoClient(settings.ConnectionString);
+});
+
+builder.Services.AddSingleton(sp => {
+    var settings = sp.GetRequiredService<IOptions<MongoSettings>>().Value;
+    var client = sp.GetRequiredService<IMongoClient>();
+    return client.GetDatabase(settings.DatabaseName);
+});
+
+// Register MongoDB Context and Services
+builder.Services.AddScoped<MongoDbContext>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IMongoIndexService, MongoIndexService>();
+
+// Register ASP.NET Core Identity PasswordHasher for secure password hashing
+builder.Services.AddScoped<IPasswordHasher<ApplicationUser>, PasswordHasher<ApplicationUser>>();
+
+// Configure Rate Limiting for authentication endpoints
+builder.Services.AddRateLimiter(options =>
+{
+    // Strict rate limiting policy for authentication endpoints (login/register)
+    options.AddPolicy("AuthPolicy", context => 
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: GetClientIdentifier(context),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5, // Allow 5 attempts
+                Window = TimeSpan.FromMinutes(15), // Per 15-minute window
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0 // No queueing for auth endpoints - fail fast
+            }));
+    
+    // Global rate limiting policy (more lenient for general API usage)
+    options.AddPolicy("GlobalPolicy", context => 
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: GetClientIdentifier(context),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 100, // Allow 100 requests
+                Window = TimeSpan.FromMinutes(1), // Per minute
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 10
+            }));
+    
+    // Configure rejection response with security headers
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = 429; // Too Many Requests
+        context.HttpContext.Response.Headers["Retry-After"] = "900"; // 15 minutes for auth endpoints
+        context.HttpContext.Response.Headers["X-RateLimit-Limit"] = "5";
+        context.HttpContext.Response.Headers["X-RateLimit-Remaining"] = "0";
+        
+        await context.HttpContext.Response.WriteAsync(
+            "Rate limit exceeded. Too many authentication attempts. Please try again later.", 
+            cancellationToken);
+    };
+});
+
+// Helper function to get client identifier for rate limiting
+static string GetClientIdentifier(HttpContext context)
+{
+    // Check for forwarded IP first (in case behind proxy/load balancer)
+    var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+    if (!string.IsNullOrEmpty(forwardedFor))
+    {
+        return forwardedFor.Split(',')[0].Trim();
+    }
+    
+    // Fallback to connection remote IP
+    return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+}
 
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-        .AddJwtBearer(options =>
+})        .AddJwtBearer(options =>
         {
+            var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is not configured");
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
@@ -80,18 +150,17 @@ builder.Services.AddAuthentication(options =>
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = builder.Configuration["Jwt:Issuer"],
                 ValidAudience = builder.Configuration["Jwt:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(builder.Configuration["Jwt:Key"]))
+                IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(jwtKey))
                 {
                     KeyId = "myKeyId"
                 }
             };
         });
 
-// Register services
-
-
+// Register application services
 builder.Services.AddTransient<IAiService, AiService>();
 builder.Services.AddScoped<IMovieRepo, MovieRepo>();
+builder.Services.AddHttpClient<ITMDBService, TMDBService>();
 
 // Update CORS policy so that only the frontend on http://localhost:5173 is allowed.
 builder.Services.AddCors(options =>
@@ -102,14 +171,28 @@ builder.Services.AddCors(options =>
             "http://localhost:5173",
             "https://kind-smoke-050d18e03.6.azurestaticapps.net")
               .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
+              .AllowAnyMethod();    });
 });
 
 builder.Services.AddHttpClient<ITMDBService, TMDBService>();
 
 var app = builder.Build();
 
+// Create MongoDB indexes on startup
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var indexService = scope.ServiceProvider.GetRequiredService<IMongoIndexService>();
+        await indexService.CreateIndexesAsync();
+        Console.WriteLine("MongoDB indexes created successfully.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Warning: Failed to create MongoDB indexes: {ex.Message}");
+        // Don't fail startup if index creation fails
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {
@@ -147,6 +230,7 @@ app.UseStaticFiles(new StaticFileOptions
 
 app.UseRouting();
 app.UseCors("AllowFrontend");
+app.UseRateLimiter(); // Add rate limiting middleware
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
