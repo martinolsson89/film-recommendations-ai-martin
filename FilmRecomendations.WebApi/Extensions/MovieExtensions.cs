@@ -15,22 +15,16 @@ namespace FilmRecomendations.WebApi.Extensions
         /// <param name="User"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
-        public static async Task<MovieCUDtO> AddLoggedInUserToDtoAsync(this MovieCUDtO movie, UserManager<ApplicationUser> userManager, ClaimsPrincipal User)
+        public static Task<MovieCUDtO> AddLoggedInUserToDtoAsync(this MovieCUDtO movie, string userId, ClaimsPrincipal User)
         {
-            var username = userManager.GetUserName(User);
-            if (username == null)
-            {
-                throw new ArgumentException("User not found");
-            }
-            var user = await userManager.FindByNameAsync(username);
-            if (user == null)
+            if (userId == null)
             {
                 throw new ArgumentException("User not found");
             }
 
-            movie.UserId = user.Id;
+            movie.UserId = userId;
 
-            return movie;
+            return Task.FromResult(movie);
         }
     }
 }

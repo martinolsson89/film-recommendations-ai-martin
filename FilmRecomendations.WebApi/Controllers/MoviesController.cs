@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using FilmRecomendations.WebApi.Extensions;
 using System.IO;
 using System.Threading.Tasks;
+using FilmRecomendations.Db.Services;
 
 namespace FilmRecomendations.WebApi.Controllers;
 
@@ -17,14 +18,14 @@ namespace FilmRecomendations.WebApi.Controllers;
 public class MoviesController : ControllerBase
 {
     private readonly IMovieRepo _movieRepo;
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IUserService _userService;
     private readonly ILogger<MoviesController> _logger;
     private readonly IWebHostEnvironment _environment;
 
-    public MoviesController(IMovieRepo movieRepo, UserManager<ApplicationUser> userManager, ILogger<MoviesController> logger, IWebHostEnvironment environment)
+    public MoviesController(IMovieRepo movieRepo, IUserService userService, ILogger<MoviesController> logger, IWebHostEnvironment environment)
     {
         _movieRepo = movieRepo;
-        _userManager = userManager;
+        _userService = userService;
         _logger = logger;
         _environment = environment;
     }
@@ -36,18 +37,21 @@ public class MoviesController : ControllerBase
     {
         try
         {
-            var username = _userManager.GetUserName(User);
-            if (username == null)
+            // Get user ID from JWT token claims
+            var userId = GetCurrentUserId();
+            if (userId == null)
             {
                 return BadRequest("User not found");
             }
-            var user = await _userManager.FindByNameAsync(username);
+
+            // Verify user exists and get their movies
+            var user = await _userService.FindByIdAsync(userId);
             if (user == null)
             {
                 return BadRequest("User not found");
             }
 
-            var watchList = await _movieRepo.GetWatchlistAsync(user.Id, pageNumber, pageSize, filter);
+            var watchList = await _movieRepo.GetWatchlistAsync(userId, pageNumber, pageSize, filter);
 
             return Ok(watchList);
         }
@@ -65,18 +69,19 @@ public class MoviesController : ControllerBase
     {
         try
         {
-            var username = _userManager.GetUserName(User);
-            if (username == null)
+            var userId = GetCurrentUserId();
+            if (userId == null)
             {
                 return BadRequest("User not found");
             }
-            var user = await _userManager.FindByNameAsync(username);
+
+            var user = await _userService.FindByIdAsync(userId);
             if (user == null)
             {
                 return BadRequest("User not found");
             }
 
-            var movies = await _movieRepo.GetMoviesAsync(user.Id, pageNumber, pageSize, filter);
+            var movies = await _movieRepo.GetMoviesAsync(userId, pageNumber, pageSize, filter);
 
             return Ok(movies);
         }
@@ -112,7 +117,20 @@ public class MoviesController : ControllerBase
     {
         try
         {
-            await movie.AddLoggedInUserToDtoAsync(_userManager, User);
+
+            var userId = GetCurrentUserId();
+            if (userId == null)
+            {
+                return BadRequest("User not found");
+            }
+
+            var user = await _userService.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return BadRequest("User not found");
+            }
+            
+            await movie.AddLoggedInUserToDtoAsync(userId, User);
 
             var addedMovie = await _movieRepo.AddMovieAsync(movie);
 
@@ -132,7 +150,19 @@ public class MoviesController : ControllerBase
     {
         try
         {
-            await movie.AddLoggedInUserToDtoAsync(_userManager, User);
+             var userId = GetCurrentUserId();
+            if (userId == null)
+            {
+                return BadRequest("User not found");
+            }
+
+            var user = await _userService.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return BadRequest("User not found");
+            }
+            
+            await movie.AddLoggedInUserToDtoAsync(userId, User);
 
             var updatedMovie = await _movieRepo.UpdateMovieAsync(movie);
 
@@ -169,23 +199,24 @@ public class MoviesController : ControllerBase
     {
         try
         {
-            var username = _userManager.GetUserName(User);
-            if (username == null)
+             var userId = GetCurrentUserId();
+            if (userId == null)
             {
                 return BadRequest("User not found");
             }
-            var user = await _userManager.FindByNameAsync(username);
+
+            var user = await _userService.FindByIdAsync(userId);
             if (user == null)
             {
                 return BadRequest("User not found");
             }
 
-            var movie = await _movieRepo.GetMovieByTMDbIdAsync(user.Id, tmdbId);
+            var movie = await _movieRepo.GetMovieByTMDbIdAsync(userId, tmdbId);
             if (movie == null)
             {
                 return Ok(new { exists = false });
             }
-        
+
             return Ok(new { exists = true, movie });
         }
         catch (Exception e)
@@ -202,18 +233,19 @@ public class MoviesController : ControllerBase
     {
         try
         {
-            var username = _userManager.GetUserName(User);
-            if (username == null)
+             var userId = GetCurrentUserId();
+            if (userId == null)
             {
                 return BadRequest("User not found");
             }
-            var user = await _userManager.FindByNameAsync(username);
+
+            var user = await _userService.FindByIdAsync(userId);
             if (user == null)
             {
                 return BadRequest("User not found");
             }
 
-            var watchList = await _movieRepo.GetLikedMoviesAsync(user.Id, filter, pageNumber, pageSize);
+            var watchList = await _movieRepo.GetLikedMoviesAsync(userId, filter, pageNumber, pageSize);
 
             return Ok(watchList);
         }
@@ -231,18 +263,19 @@ public class MoviesController : ControllerBase
     {
         try
         {
-            var username = _userManager.GetUserName(User);
-            if (username == null)
+             var userId = GetCurrentUserId();
+            if (userId == null)
             {
                 return BadRequest("User not found");
             }
-            var user = await _userManager.FindByNameAsync(username);
+
+            var user = await _userService.FindByIdAsync(userId);
             if (user == null)
             {
                 return BadRequest("User not found");
             }
 
-            var watchList = await _movieRepo.GetDislikedMoviesAsync(user.Id, filter, pageNumber, pageSize);
+            var watchList = await _movieRepo.GetDislikedMoviesAsync(userId, filter, pageNumber, pageSize);
 
             return Ok(watchList);
         }
@@ -253,19 +286,20 @@ public class MoviesController : ControllerBase
         }
     }
 
-[HttpGet("profile-picture")]
+    [HttpGet("profile-picture")]
     [ProducesResponseType(200, Type = typeof(string))]
     [ProducesResponseType(400, Type = typeof(string))]
     public async Task<IActionResult> GetProfilePicture()
     {
         try
         {
-            var username = _userManager.GetUserName(User);
-            if (username == null)
+             var userId = GetCurrentUserId();
+            if (userId == null)
             {
                 return BadRequest("User not found");
             }
-            var user = await _userManager.FindByNameAsync(username);
+
+            var user = await _userService.FindByIdAsync(userId);
             if (user == null)
             {
                 return BadRequest("User not found");
@@ -290,88 +324,90 @@ public class MoviesController : ControllerBase
     [ProducesResponseType(400, Type = typeof(string))]
     public async Task<IActionResult> UploadProfilePicture(IFormFile file)
     {
-    try
-    {
-        // Get the current user's username
-        var username = _userManager.GetUserName(User);
-        if (string.IsNullOrEmpty(username))
+        try
         {
-            return BadRequest("User not found");
-        }
+             var userId = GetCurrentUserId();
+            if (userId == null)
+            {
+                return BadRequest("User not found");
+            }
 
-        // Find the user
-        var user = await _userManager.FindByNameAsync(username);
-        if (user == null)
+            var user = await _userService.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return BadRequest("User not found");
+            }
+
+            // Validate the uploaded file
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("No file uploaded");
+            }
+
+            // Validate file extension
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(extension))
+            {
+                return BadRequest("Invalid file type. Only JPG, JPEG, PNG, and GIF are allowed.");
+            }
+
+            // Validate file size (e.g., max 5MB)
+            if (file.Length > 5 * 1024 * 1024)
+            {
+                return BadRequest("File size exceeds 5MB limit.");
+            }
+
+            // Determine the uploads folder path with a fallback
+            string uploadsFolder;
+            if (!string.IsNullOrEmpty(_environment.WebRootPath))
+            {
+                uploadsFolder = Path.Combine(_environment.WebRootPath, "Uploads");
+            }
+            else
+            {
+                // Fallback to ContentRootPath if WebRootPath is null
+                uploadsFolder = Path.Combine(_environment.ContentRootPath, "Uploads");
+            }
+
+            // Ensure the uploads directory exists
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            // Generate a unique filename
+            var fileName = $"{Guid.NewGuid()}{extension}";
+            var filePath = Path.Combine(uploadsFolder, fileName);
+
+            // Save the file
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            // Generate the file URL
+            string fileUrl = !string.IsNullOrEmpty(_environment.WebRootPath)
+                ? $"{Request.Scheme}://{Request.Host}/Uploads/{fileName}"
+                : $"{Request.Scheme}://{Request.Host}/Uploads/{fileName}"; // Adjust if ContentRootPath requires different serving logic
+
+            // Update user's profile picture
+            user.ProfilePicture = fileUrl;
+            var result = await _userService.UpdateUserAsync(user);
+            if (!result)
+            {
+                return BadRequest("Failed to update profile picture");
+            }
+
+            return Ok(fileUrl);
+        }
+        catch (Exception e)
         {
-            return BadRequest("User not found");
+            return BadRequest($"Error uploading profile picture: {e.Message}");
         }
-
-        // Validate the uploaded file
-        if (file == null || file.Length == 0)
-        {
-            return BadRequest("No file uploaded");
-        }
-
-        // Validate file extension
-        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-        if (!allowedExtensions.Contains(extension))
-        {
-            return BadRequest("Invalid file type. Only JPG, JPEG, PNG, and GIF are allowed.");
-        }
-
-        // Validate file size (e.g., max 5MB)
-        if (file.Length > 5 * 1024 * 1024)
-        {
-            return BadRequest("File size exceeds 5MB limit.");
-        }
-
-        // Determine the uploads folder path with a fallback
-        string uploadsFolder;
-        if (!string.IsNullOrEmpty(_environment.WebRootPath))
-        {
-            uploadsFolder = Path.Combine(_environment.WebRootPath, "Uploads");
-        }
-        else
-        {
-            // Fallback to ContentRootPath if WebRootPath is null
-            uploadsFolder = Path.Combine(_environment.ContentRootPath, "Uploads");
-        }
-
-        // Ensure the uploads directory exists
-        if (!Directory.Exists(uploadsFolder))
-        {
-            Directory.CreateDirectory(uploadsFolder);
-        }
-
-        // Generate a unique filename
-        var fileName = $"{Guid.NewGuid()}{extension}";
-        var filePath = Path.Combine(uploadsFolder, fileName);
-
-        // Save the file
-        using (var stream = new FileStream(filePath, FileMode.Create))
-        {
-            await file.CopyToAsync(stream);
-        }
-
-        // Generate the file URL
-        string fileUrl = !string.IsNullOrEmpty(_environment.WebRootPath)
-            ? $"{Request.Scheme}://{Request.Host}/Uploads/{fileName}"
-            : $"{Request.Scheme}://{Request.Host}/Uploads/{fileName}"; // Adjust if ContentRootPath requires different serving logic
-
-        // Update user's profile picture
-        user.ProfilePicture = fileUrl;
-        var result = await _userManager.UpdateAsync(user);
-        if (!result.Succeeded)
-        {
-            return BadRequest("Failed to update profile picture");
-        }
-
-        return Ok(fileUrl);
     }
-    catch (Exception e)
+    private string? GetCurrentUserId()
     {
-        return BadRequest($"Error uploading profile picture: {e.Message}");
+        return User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
     }
-}
 }
