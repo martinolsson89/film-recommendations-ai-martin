@@ -5,7 +5,7 @@ import SearchForm from "../components/SearchForm";
 import Suggestions from "../components/Suggestions";
 import MovieGrid from "../components/MovieGrid";
 import { useMovieSearch } from "../hooks/useMovieSearch";
-import type { Movie } from "../types/movie.types";
+import type { MovieRecommendation } from "../types/movie.types";
 
 const HomePage: React.FC = () => {
   const { movies, loading, error, searchMovies } = useMovieSearch();
@@ -14,7 +14,7 @@ const HomePage: React.FC = () => {
     searchMovies(query);
   };
 
-  const handleMovieClick = (movie: Movie) => {
+  const handleMovieClick = (movie: MovieRecommendation) => {
     // TODO: Navigate to movie details page or open modal
     console.log("Movie clicked:", movie);
   };

@@ -1,12 +1,12 @@
 import React from "react";
 import MovieCard from "./MovieCard";
-import type { Movie } from "../types/movie.types";
+import type { MovieRecommendation } from "../types/movie.types";
 
 interface MovieGridProps {
-  movies: Movie[];
+  movies: MovieRecommendation[];
   loading?: boolean;
   error?: string | null;
-  onMovieClick?: (movie: Movie) => void;
+  onMovieClick?: (movie: MovieRecommendation) => void;
 }
 
 const MovieGrid: React.FC<MovieGridProps> = ({ 
@@ -72,7 +72,7 @@ const MovieGrid: React.FC<MovieGridProps> = ({
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {movies.map((movie) => (
           <MovieCard
-            key={movie.id}
+            key={movie.movie_id}
             movie={movie}
             onClick={onMovieClick}
           />

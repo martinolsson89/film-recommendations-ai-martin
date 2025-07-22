@@ -1,9 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { movieService } from '../../services/movieService';
-import type { Movie } from '../../types/movie.types';
+import type { MovieRecommendation } from '../../types/movie.types';
 
 interface MoviesState {
-  movies: Movie[];
+  movies: MovieRecommendation[];
   loading: boolean;
   error: string | null;
   searchPrompt: string;

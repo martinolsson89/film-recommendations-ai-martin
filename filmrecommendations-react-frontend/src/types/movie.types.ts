@@ -1,3 +1,11 @@
+// Movie recommendation from API - simplified format
+export interface MovieRecommendation {
+  movie_id: number;
+  movie_name: string;
+  release_year: number;
+  poster_path: string;
+}
+
 export interface Movie {
   adult: boolean;
   backdrop_path: string;

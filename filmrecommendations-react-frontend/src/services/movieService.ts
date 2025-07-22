@@ -1,6 +1,7 @@
 import { apiService } from './api';
 import type { 
   Movie, 
+  MovieRecommendation,
   MovieIdResponse,
   MovieTrailer, 
   Director, 
@@ -13,10 +14,10 @@ import type {
 } from '../types/movie.types';
 
 export class MovieService {
-  async getFilmRecommendations(prompt: string): Promise<Movie[]> {
+  async getFilmRecommendations(prompt: string): Promise<MovieRecommendation[]> {
     const encodedPrompt = encodeURIComponent(prompt);
     console.log(`Fetching film recommendations for prompt: ${encodedPrompt}`);
-    return apiService.get<Movie[]>(`/FilmRecomendations/GetFilmRecommendation?prompt=${encodedPrompt}`, true);
+    return apiService.get<MovieRecommendation[]>(`/FilmRecomendations/GetFilmRecommendation?prompt=${encodedPrompt}`, true);
   }
 
   async searchMovie(movieName: string, releaseYear?: number): Promise<MovieIdResponse> {
