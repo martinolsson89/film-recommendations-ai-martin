@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { checkAuthStatus } from "./features/auth/authSlice";
 import HomePage from "./pages/HomePage";
+import MovieDetails from "./pages/MovieDetails";
 import type { AppDispatch } from "./app/store";
 
 function App() {
@@ -16,7 +17,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      {/* <Route path="/other" element={<OtherPage />} /> */}
+      <Route path="/movies/:id" element={<MovieDetails />} />
     </Routes>
   );
 }

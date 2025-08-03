@@ -1,10 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { movieService } from '../../services/movieService';
-import type { MovieRecommendation } from '../../types/movie.types';
+import type { MovieRecommendation, Movie, StreamingProviderResponse } from '../../types/movie.types';
 
 interface MoviesState {
   movies: MovieRecommendation[];
+  currentMovie: Movie | null;
+  streamingProviders: StreamingProviderResponse | null;
   loading: boolean;
+  movieDetailsLoading: boolean;
   error: string | null;
   searchPrompt: string;
 }
@@ -18,7 +21,10 @@ const loadInitialState = (): MoviesState => {
     if (savedMovies && savedPrompt) {
       return {
         movies: JSON.parse(savedMovies),
+        currentMovie: null,
+        streamingProviders: null,
         loading: false,
+        movieDetailsLoading: false,
         error: null,
         searchPrompt: savedPrompt
       };
@@ -29,7 +35,10 @@ const loadInitialState = (): MoviesState => {
   
   return {
     movies: [],
+    currentMovie: null,
+    streamingProviders: null,
     loading: false,
+    movieDetailsLoading: false,
     error: null,
     searchPrompt: ''
   };
@@ -56,6 +65,36 @@ export const searchMovies = createAsyncThunk(
   }
 );
 
+export const fetchMovieDetails = createAsyncThunk(
+  'movies/fetchMovieDetails',
+  async (movieId: number, { rejectWithValue }) => {
+    try {
+      const movieDetails = await movieService.getMovieDetails(movieId);
+      if (!movieDetails) {
+        return rejectWithValue('Movie details not found');
+      }
+      return movieDetails;
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error.message : 'Failed to fetch movie details'
+      );
+    }
+  }
+);
+
+export const fetchStreamingProviders = createAsyncThunk(
+  'movies/fetchStreamingProviders',
+  async (movieId: number) => {
+    try {
+      const providers = await movieService.getStreamingProviders(movieId);
+      return providers;
+    } catch (error) {
+      console.warn('Failed to fetch streaming providers:', error);
+      return null; // Don't reject, just return null if streaming providers fail
+    }
+  }
+);
+
 const moviesSlice = createSlice({
   name: 'movies',
   initialState,
@@ -69,6 +108,12 @@ const moviesSlice = createSlice({
       sessionStorage.removeItem('lastSearchQuery');
     },
     clearError: (state) => {
+      state.error = null;
+    },
+    clearCurrentMovie: (state) => {
+      state.currentMovie = null;
+      state.streamingProviders = null;
+      state.movieDetailsLoading = false;
       state.error = null;
     }
   },
@@ -91,9 +136,28 @@ const moviesSlice = createSlice({
         state.loading = false;
         state.movies = [];
         state.error = action.payload as string;
+      })
+      // Movie details cases
+      .addCase(fetchMovieDetails.pending, (state) => {
+        state.movieDetailsLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchMovieDetails.fulfilled, (state, action) => {
+        state.movieDetailsLoading = false;
+        state.currentMovie = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchMovieDetails.rejected, (state, action) => {
+        state.movieDetailsLoading = false;
+        state.currentMovie = null;
+        state.error = action.payload as string;
+      })
+      // Streaming providers cases
+      .addCase(fetchStreamingProviders.fulfilled, (state, action) => {
+        state.streamingProviders = action.payload;
       });
   }
 });
 
-export const { clearMovies, clearError } = moviesSlice.actions;
+export const { clearMovies, clearError, clearCurrentMovie } = moviesSlice.actions;
 export default moviesSlice.reducer;

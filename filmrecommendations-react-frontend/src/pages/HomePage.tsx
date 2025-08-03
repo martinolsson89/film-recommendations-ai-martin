@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import TopBar from "../components/TopBar";
 import TopPicksSection from "../components/TopPicksSection";
 import SearchForm from "../components/SearchForm";
@@ -9,14 +10,17 @@ import type { MovieRecommendation } from "../types/movie.types";
 
 const HomePage: React.FC = () => {
   const { movies, loading, error, searchMovies } = useMovieSearch();
+  const navigate = useNavigate();
 
   const handleSearch = (query: string) => {
     searchMovies(query);
   };
 
   const handleMovieClick = (movie: MovieRecommendation) => {
-    // TODO: Navigate to movie details page or open modal
-    console.log("Movie clicked:", movie);
+     
+    navigate(`/movies/${movie.movie_id}`);
+     // Log the movie click for debugging
+    console.log("Movie clicked Homepage:", movie);
   };
 
   return (

@@ -10,6 +10,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick }) => {
   const handleClick = () => {
     if (onClick) {
       onClick(movie);
+      console.log(`Movie clicked: ${movie.movie_name}`);
     }
   };
 
