@@ -1,5 +1,5 @@
-const API_BASE_URL = 'https://localhost:7103';
-// const API_BASE_URL = 'https://film-recommendations-backend-cda7a6gybwabbhey.swedencentral-01.azurewebsites.net'
+// const API_BASE_URL = 'https://localhost:7103';
+const API_BASE_URL = 'https://film-recommendations-backend-cda7a6gybwabbhey.swedencentral-01.azurewebsites.net'
 
 class ApiService {
   private baseUrl: string;
