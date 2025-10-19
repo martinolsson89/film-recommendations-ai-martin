@@ -1,11 +1,11 @@
-import { useSelector, useDispatch } from 'react-redux';
-import type { RootState, AppDispatch } from '../app/store';
+import { useAppSelector } from './useAppSelector';
+import { useAppDispatch } from './useAppDispatch';
 import { searchMovies, clearMovies, clearError } from '../features/movies/moviesSlice';
 
 export const useMovieSearch = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
-  const { movies, loading, error, searchPrompt } = useSelector((state: RootState) => state.movies);
+  const dispatch = useAppDispatch();
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { movies, loading, error, searchPrompt } = useAppSelector((state) => state.movies);
 
   const handleSearchMovies = async (prompt: string) => {
     console.log('Auth state - isAuthenticated:', isAuthenticated);

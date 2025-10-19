@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useAppDispatch } from "../hooks/useAppDispatch";
+import { useAppSelector } from "../hooks/useAppSelector";
 import Modal from "./Modal";
 import { registerUser, clearError } from "../features/auth/authSlice";
-import type { RootState, AppDispatch } from "../app/store";
+// Types are inferred via typed hooks
 import type { RegisterRequest } from "../types/auth.types";
 
 interface RegisterModalProps {
@@ -12,8 +13,8 @@ interface RegisterModalProps {
 }
 
 const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitchToLogin }) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { loading, error, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const dispatch = useAppDispatch();
+  const { loading, error, isAuthenticated } = useAppSelector((state) => state.auth);
 
   const [formData, setFormData] = useState<RegisterRequest & { confirmPassword: string }>({
     userName: '',
@@ -74,7 +75,11 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
       return;
     }
 
-    const { confirmPassword, ...registerData } = formData;
+    const registerData = {
+      userName: formData.userName,
+      email: formData.email,
+      password: formData.password
+    };
     dispatch(registerUser(registerData));
   };
 

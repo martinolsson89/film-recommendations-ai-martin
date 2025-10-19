@@ -1,5 +1,5 @@
-// const API_BASE_URL = 'https://localhost:7103';
-const API_BASE_URL = 'https://film-recommendations-backend-cda7a6gybwabbhey.swedencentral-01.azurewebsites.net'
+const API_BASE_URL = 'https://localhost:7103';
+// const API_BASE_URL = 'https://film-recommendations-backend-cda7a6gybwabbhey.swedencentral-01.azurewebsites.net'
 
 class ApiService {
   private baseUrl: string;
@@ -44,6 +44,16 @@ class ApiService {
   async post<T, U>(endpoint: string, data: U, requireAuth: boolean = false): Promise<T> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: 'POST',
+      headers: requireAuth ? this.getAuthHeaders() : { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    return this.handleResponse<T>(response);
+  }
+
+  async put<T, U>(endpoint: string, data: U, requireAuth: boolean = false): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      method: 'PUT',
       headers: requireAuth ? this.getAuthHeaders() : { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
