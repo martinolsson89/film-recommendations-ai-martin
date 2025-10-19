@@ -55,21 +55,45 @@ export class MovieService {
     return this.getImageUrl(path, 'original');
   }
 
-  // User movie management methods
-  async getUserMovies(userId: string, pageNr: number = 1, pageSize: number = 10): Promise<ResponsePageDto<MovieGetDto>> {
-    return apiService.get<ResponsePageDto<MovieGetDto>>(`/Movies/user/${userId}?pageNr=${pageNr}&pageSize=${pageSize}`, true);
+  // User movie management methods (aligned with backend MoviesController)
+  async getUserMovies(pageNumber: number = 0, pageSize: number = 10, filter?: string): Promise<ResponsePageDto<MovieGetDto>> {
+    const filterParam = filter ? `&filter=${encodeURIComponent(filter)}` : '';
+    return apiService.get<ResponsePageDto<MovieGetDto>>(`/api/Movies?pageNumber=${pageNumber}&pageSize=${pageSize}${filterParam}`, true);
   }
 
   async addUserMovie(movie: MovieCUDto): Promise<MovieGetDto> {
-    return apiService.post<MovieGetDto, MovieCUDto>('/Movies', movie, true);
+    return apiService.post<MovieGetDto, MovieCUDto>('/api/Movies', movie, true);
   }
 
-  async updateUserMovie(movieId: string, movie: MovieCUDto): Promise<MovieGetDto> {
-    return apiService.post<MovieGetDto, MovieCUDto>(`/Movies/${movieId}`, movie, true);
+  async updateUserMovie(movie: MovieCUDto): Promise<MovieGetDto> {
+    return apiService.put<MovieGetDto, MovieCUDto>('/api/Movies', movie, true);
   }
 
-  async deleteUserMovie(movieId: string): Promise<void> {
-    return apiService.post<void, Record<string, never>>(`/Movies/${movieId}`, {}, true);
+  private async getMovieExistsByTMDbId(tmdbId: number): Promise<{ exists: boolean; movie?: MovieGetDto }> {
+    return apiService.get<{ exists: boolean; movie?: MovieGetDto }>(`/api/Movies/exists/${tmdbId}`, true);
+  }
+
+  private async upsertLiked(tmdbId: number, title: string, liked: boolean): Promise<MovieGetDto> {
+    const existsResp = await this.getMovieExistsByTMDbId(tmdbId);
+    if (existsResp.exists && existsResp.movie?.MovieId) {
+      // Update existing record
+      return this.updateUserMovie({
+        MovieId: existsResp.movie.MovieId,
+        Title: title,
+        TMDbId: tmdbId,
+        Liked: liked
+      });
+    }
+    // Create new record
+    return this.addUserMovie({ Title: title, TMDbId: tmdbId, Liked: liked });
+  }
+
+  async likeMovie(tmdbId: number, title: string): Promise<MovieGetDto> {
+    return this.upsertLiked(tmdbId, title, true);
+  }
+
+  async dislikeMovie(tmdbId: number, title: string): Promise<MovieGetDto> {
+    return this.upsertLiked(tmdbId, title, false);
   }
 
   // Actor details method

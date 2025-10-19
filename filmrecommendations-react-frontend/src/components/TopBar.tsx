@@ -1,13 +1,14 @@
 import React, { useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useAppSelector } from "../hooks/useAppSelector";
+import { useAppDispatch } from "../hooks/useAppDispatch";
 import LoginModal from "./LoginModal";
 import RegisterModal from "./RegisterModal";
 import { logoutUser } from "../features/auth/authSlice";
-import type { RootState, AppDispatch } from "../app/store";
+// types now provided via typed hooks
 
 const TopBar: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const dispatch = useAppDispatch();
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
   
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);

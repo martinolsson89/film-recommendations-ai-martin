@@ -1,6 +1,38 @@
 import React from 'react';
 import { movieService } from '../../services/movieService';
-import type { Movie } from '../../types/movie.types';
+import type { Movie, Genre, ProductionCountry, Director } from '../../types/movie.types';
+
+type WithValues<T> = { $values?: T[] };
+const toArray = <T,>(input: T[] | WithValues<T> | undefined): T[] =>
+  Array.isArray(input) ? input : input?.$values ?? [];
+
+const isGenreUpper = (x: unknown): x is Genre =>
+  typeof x === 'object' && x !== null && 'Name' in x && typeof (x as Genre).Name === 'string';
+
+const isGenreLower = (x: unknown): x is { name: string } =>
+  typeof x === 'object' && x !== null && 'name' in x && typeof (x as { name: unknown }).name === 'string';
+
+const genreLabel = (g: unknown): string => {
+  if (isGenreUpper(g)) return g.Name;
+  if (isGenreLower(g)) return g.name;
+  return '';
+};
+
+const isCountry = (x: unknown): x is ProductionCountry =>
+  typeof x === 'object' && x !== null && 'name' in x && typeof (x as ProductionCountry).name === 'string';
+
+const countryLabel = (c: unknown): string => (isCountry(c) ? c.name : '');
+
+const isDirectorUpper = (x: unknown): x is Director =>
+  typeof x === 'object' && x !== null && 'Name' in x && typeof (x as Director).Name === 'string';
+const isDirectorLower = (x: unknown): x is { name: string } =>
+  typeof x === 'object' && x !== null && 'name' in x && typeof (x as { name: unknown }).name === 'string';
+
+const directorLabel = (d: unknown): string => {
+  if (isDirectorUpper(d)) return d.Name ?? '';
+  if (isDirectorLower(d)) return d.name ?? '';
+  return '';
+};
 
 interface MovieHeaderProps {
   movie: Movie;
@@ -19,6 +51,9 @@ const MovieHeader: React.FC<MovieHeaderProps> = ({ movie }) => {
     const minutes = runtime % 60;
     return `${hours}h ${minutes}m`;
   };
+  // Support both PascalCase (Runtime, Directors) and camelCase (runtime, directors)
+  const runtimeValue = (movie as unknown as { Runtime?: number; runtime?: number }).Runtime ??
+    (movie as unknown as { Runtime?: number; runtime?: number }).runtime ?? 0;
 
   return (
     <div 
@@ -59,12 +94,11 @@ const MovieHeader: React.FC<MovieHeaderProps> = ({ movie }) => {
               {/* Genres */}
               <p className="mb-2">
                 <span className="font-semibold">
-                  {movie.genres && Array.isArray(movie.genres) 
-                    ? movie.genres.map(genre => genre.Name || genre.name).join(', ')
-                    : movie.genres?.$values 
-                      ? movie.genres.$values.map((genre: any) => genre.Name || genre.name).join(', ')
-                      : 'N/A'
-                  }
+                  {(() => {
+                    const genres = toArray<Genre>(movie.genres as unknown as Genre[] | WithValues<Genre>);
+                    const names = genres.map(genreLabel).filter(Boolean);
+                    return names.length > 0 ? names.join(', ') : 'N/A';
+                  })()}
                 </span>
               </p>
 
@@ -73,28 +107,30 @@ const MovieHeader: React.FC<MovieHeaderProps> = ({ movie }) => {
 
               {/* Runtime */}
               <p className="mb-2">
-                <span className="font-semibold">Length:</span> {formatRuntime(movie.Runtime)}
+                <span className="font-semibold">Length:</span> {formatRuntime(runtimeValue)}
               </p>
 
               {/* Countries */}
               <p className="mb-2">
                 <span className="font-semibold">Country:</span> {
-                  movie.production_countries && Array.isArray(movie.production_countries)
-                    ? movie.production_countries.map(country => country.name).join(', ')
-                    : movie.production_countries?.$values
-                      ? movie.production_countries.$values.map((country: any) => country.name).join(', ')
-                      : 'N/A'
+                  (() => {
+                    const countries = toArray<ProductionCountry>(movie.production_countries as unknown as ProductionCountry[] | WithValues<ProductionCountry>);
+                    const names = countries.map(countryLabel).filter(Boolean);
+                    return names.length > 0 ? names.join(', ') : 'N/A';
+                  })()
                 }
               </p>
 
               {/* Directors */}
               <p className="mb-2">
                 <span className="font-semibold">Director:</span> {
-                  movie.Directors && Array.isArray(movie.Directors)
-                    ? movie.Directors.map(director => director.Name).join(', ')
-                    : movie.Directors?.$values
-                      ? movie.Directors.$values.map((director: any) => director.Name).join(', ')
-                      : 'N/A'
+                  (() => {
+                    const directorsSource = (movie as unknown as { Directors?: Director[]; directors?: Director[] }).Directors ??
+                      (movie as unknown as { Directors?: Director[]; directors?: Director[] }).directors;
+                    const directors = toArray<Director>(directorsSource as unknown as Director[] | WithValues<Director>);
+                    const names = directors.map(directorLabel).filter(Boolean);
+                    return names.length > 0 ? names.join(', ') : 'N/A';
+                  })()
                 }
               </p>
             </div>

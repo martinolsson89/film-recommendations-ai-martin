@@ -1,12 +1,30 @@
 import React, { useEffect } from 'react';
 import type { MovieTrailer } from '../../types/movie.types';
 
+type WithValues<T> = { $values?: T[] };
+const toArray = <T,>(input: T[] | WithValues<T> | undefined): T[] =>
+  Array.isArray(input) ? input : input?.$values ?? [];
+
 interface TrailerModalProps {
   isOpen: boolean;
   onClose: () => void;
   trailers: MovieTrailer[];
   movieTitle: string;
 }
+
+// Safe accessors supporting both PascalCase and camelCase trailer fields
+const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
+const getVal = (t: unknown, primary: string, secondary?: string): unknown => {
+  if (!isRecord(t)) return undefined;
+  if (primary in t) return (t as Record<string, unknown>)[primary];
+  if (secondary && secondary in t) return (t as Record<string, unknown>)[secondary];
+  return undefined;
+};
+const asString = (v: unknown): string => (typeof v === 'string' ? v : v != null ? String(v) : '');
+const getKey = (t: unknown): string => asString(getVal(t, 'Key', 'key'));
+const getSite = (t: unknown): string => asString(getVal(t, 'Site', 'site'));
+const getType = (t: unknown): string => asString(getVal(t, 'Type', 'type'));
+const getName = (t: unknown): string => asString(getVal(t, 'Name', 'name'));
 
 const TrailerModal: React.FC<TrailerModalProps> = ({ isOpen, onClose, trailers, movieTitle }) => {
   // Close modal on Escape key
@@ -28,28 +46,23 @@ const TrailerModal: React.FC<TrailerModalProps> = ({ isOpen, onClose, trailers, 
     };
   }, [isOpen, onClose]);
 
-  const getTrailerToShow = (): MovieTrailer | null => {
-    // Handle both direct array and $values wrapped array
-    const trailersArray = Array.isArray(trailers) 
-      ? trailers 
-      : trailers?.$values 
-        ? trailers.$values 
-        : [];
+  const getTrailerToShow = (): unknown | null => {
+    const trailersArray = toArray<MovieTrailer>(trailers as unknown as MovieTrailer[] | WithValues<MovieTrailer>);
 
-    if (!trailersArray || trailersArray.length === 0) {
+    if (trailersArray.length === 0) {
       return null;
     }
 
     // Find a YouTube trailer, preferring official trailers
-    const youtubeTrailers = trailersArray.filter((trailer: any) =>
-      trailer.Site?.toLowerCase() === 'youtube' &&
-      trailer.Type?.toLowerCase().includes('trailer')
+    const youtubeTrailers = trailersArray.filter((trailer) =>
+      getSite(trailer).toLowerCase() === 'youtube' &&
+      getType(trailer).toLowerCase().includes('trailer')
     );
 
     // If no YouTube trailers found, try any YouTube video
     return youtubeTrailers.length > 0 
       ? youtubeTrailers[0] 
-      : trailersArray.find((trailer: any) => trailer.Site?.toLowerCase() === 'youtube') || null;
+      : trailersArray.find((trailer) => getSite(trailer).toLowerCase() === 'youtube') || null;
   };
 
   const selectedTrailer = getTrailerToShow();
@@ -78,8 +91,8 @@ const TrailerModal: React.FC<TrailerModalProps> = ({ isOpen, onClose, trailers, 
             <iframe
               width="100%"
               height="100%"
-              src={`https://www.youtube.com/embed/${selectedTrailer.Key}?autoplay=1`}
-              title={selectedTrailer.Name}
+              src={`https://www.youtube.com/embed/${getKey(selectedTrailer)}?autoplay=1`}
+              title={getName(selectedTrailer)}
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen

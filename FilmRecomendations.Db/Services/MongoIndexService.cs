@@ -87,5 +87,23 @@ public class MongoIndexService : IMongoIndexService
             new CreateIndexOptions { Name = "IX_Movies_Title_Text" });
 
         await _context.Movies.Indexes.CreateOneAsync(titleIndexModel);
+
+        // Unique compound index to prevent duplicate entries for the same (UserId, TMDbId)
+        // Only applies when TMDbId is not null.
+        var userTmdbUniqueKeys = Builders<MovieDbM>.IndexKeys
+            .Ascending(m => m.UserId)
+            .Ascending(m => m.TMDbId);
+
+        var userTmdbUniqueModel = new CreateIndexModel<MovieDbM>(
+            userTmdbUniqueKeys,
+            new CreateIndexOptions<MovieDbM>
+            {
+                Name = "UX_Movies_UserId_TMDbId",
+                Unique = true,
+                // Partial filter so that multiple null TMDbId docs don't violate uniqueness
+                PartialFilterExpression = Builders<MovieDbM>.Filter.Ne(m => m.TMDbId, null)
+            });
+
+        await _context.Movies.Indexes.CreateOneAsync(userTmdbUniqueModel);
     }
 }

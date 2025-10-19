@@ -10,7 +10,6 @@ interface MovieActionsProps {
 }
 
 const MovieActions: React.FC<MovieActionsProps> = ({ 
-  movie,
   onWatchTrailer,
   onAddToWatchlist,
   onLike,

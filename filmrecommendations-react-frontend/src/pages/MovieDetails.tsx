@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState, AppDispatch } from '../app/store';
+import { useAppDispatch } from '../hooks/useAppDispatch';
+import { useAppSelector } from '../hooks/useAppSelector';
 import { fetchMovieDetails, fetchStreamingProviders, clearCurrentMovie } from '../features/movies/moviesSlice';
 import {
   MovieHeader,
@@ -10,18 +10,19 @@ import {
   StreamingProviders,
   TrailerModal
 } from '../components/MovieDetails';
+import { movieService } from '../services/movieService';
 
 const MovieDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   
   const { 
     currentMovie, 
     streamingProviders, 
     movieDetailsLoading, 
     error 
-  } = useSelector((state: RootState) => state.movies);
+  } = useAppSelector((state) => state.movies);
 
   const [isTrailerModalOpen, setIsTrailerModalOpen] = useState(false);
 
@@ -71,13 +72,28 @@ const MovieDetails: React.FC = () => {
   };
 
   const handleLike = () => {
-    // TODO: Implement like functionality
-    console.log('Like movie:', currentMovie?.id);
+    if (!currentMovie) return;
+    movieService
+      .likeMovie(currentMovie.id, currentMovie.original_title || currentMovie.Title)
+      .then(() => {
+        // Optional: show toast/snackbar
+        console.log('Movie liked');
+      })
+      .catch((err) => {
+        console.error('Failed to like movie', err);
+      });
   };
 
   const handleDislike = () => {
-    // TODO: Implement dislike functionality
-    console.log('Dislike movie:', currentMovie?.id);
+    if (!currentMovie) return;
+    movieService
+      .dislikeMovie(currentMovie.id, currentMovie.original_title || currentMovie.Title)
+      .then(() => {
+        console.log('Movie disliked');
+      })
+      .catch((err) => {
+        console.error('Failed to dislike movie', err);
+      });
   };
 
   if (movieDetailsLoading) {
@@ -154,7 +170,11 @@ const MovieDetails: React.FC = () => {
           <div className="w-full md:w-2/3 flex flex-col gap-6">
             {/* Cast Section */}
             <CastSection 
-              actors={currentMovie.Actors} 
+              actors={(() => {
+                const src = (currentMovie as unknown as { Actors?: import('../types/movie.types').Actor[] | { $values: import('../types/movie.types').Actor[] }; actors?: import('../types/movie.types').Actor[] | { $values: import('../types/movie.types').Actor[] } }).Actors
+                  ?? (currentMovie as unknown as { Actors?: import('../types/movie.types').Actor[] | { $values: import('../types/movie.types').Actor[] }; actors?: import('../types/movie.types').Actor[] | { $values: import('../types/movie.types').Actor[] } }).actors;
+                return (src as import('../types/movie.types').Actor[] | { $values: import('../types/movie.types').Actor[] }) ?? { $values: [] as import('../types/movie.types').Actor[] };
+              })()}
               onActorClick={handleActorClick}
             />
 
@@ -182,7 +202,12 @@ const MovieDetails: React.FC = () => {
       <TrailerModal
         isOpen={isTrailerModalOpen}
         onClose={handleCloseTrailer}
-        trailers={currentMovie.Trailers}
+        trailers={(() => {
+          const src = (currentMovie as unknown as { Trailers?: import('../types/movie.types').MovieTrailer[] | { $values: import('../types/movie.types').MovieTrailer[] }; trailers?: import('../types/movie.types').MovieTrailer[] | { $values: import('../types/movie.types').MovieTrailer[] } }).Trailers
+            ?? (currentMovie as unknown as { Trailers?: import('../types/movie.types').MovieTrailer[] | { $values: import('../types/movie.types').MovieTrailer[] }; trailers?: import('../types/movie.types').MovieTrailer[] | { $values: import('../types/movie.types').MovieTrailer[] } }).trailers;
+          if (Array.isArray(src)) return src;
+          return src?.$values ?? [] as import('../types/movie.types').MovieTrailer[];
+        })()}
         movieTitle={currentMovie.original_title}
       />
     </div>
