@@ -26,6 +26,35 @@ public class MovieRepo : IMovieRepo
         if (!userExists)
             throw new ArgumentException($"User {item.UserId} does not exist in the database");
 
+        // If TMDbId is provided, upsert by (UserId, TMDbId) to avoid duplicates
+        if (item.TMDbId.HasValue)
+        {
+            var filterBuilder = Builders<MovieDbM>.Filter;
+            var upsertFilter = filterBuilder.And(
+                filterBuilder.Eq(m => m.UserId, item.UserId),
+                filterBuilder.Eq(m => m.TMDbId, item.TMDbId)
+            );
+
+            var update = Builders<MovieDbM>.Update
+                .Set(m => m.Title, item.Title)
+                .Set(m => m.TMDbId, item.TMDbId)
+                .Set(m => m.Liked, item.Liked)
+                .Set(m => m.UserId, item.UserId)
+                .Set(m => m.UpdatedAt, DateTime.UtcNow)
+                .SetOnInsert(m => m.MovieId, Guid.NewGuid().ToString())
+                .SetOnInsert(m => m.CreatedAt, DateTime.UtcNow);
+
+            var options = new FindOneAndUpdateOptions<MovieDbM>
+            {
+                IsUpsert = true,
+                ReturnDocument = ReturnDocument.After
+            };
+
+            var upserted = await _context.Movies.FindOneAndUpdateAsync(upsertFilter, update, options);
+            return MapToDto(upserted);
+        }
+
+        // Fallback: when TMDbId is not provided, insert a new record (cannot upsert reliably)
         var movie = new MovieDbM()
         {
             MovieId = Guid.NewGuid().ToString(),
