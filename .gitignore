@@ -4,6 +4,9 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 AGENTS.md
+MONGODB_REFACTOR.md
+RATE_LIMITING_IMPLEMENTATION.md
+
 # User-specific files
 *.rsuser
 *.suo

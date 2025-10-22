@@ -103,18 +103,18 @@ const StreamingProviders: React.FC<StreamingProvidersProps> = ({ movieTitle, pro
 
   return (
     <details className="group" open={isOpen} onToggle={(e) => setIsOpen((e.target as HTMLDetailsElement).open)}>
-      <summary className="text-l font-bold cursor-pointer text-white">
+      <summary className="text-l font-bold cursor-pointer text-gray-900 dark:text-white">
         Where can I stream {movieTitle}?
       </summary>
       <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-96' : 'max-h-0'}`}>
         <hr className="border-t border-gray-300 dark:border-gray-700 mt-2 mb-4" />
         {!providers || (!subscriptionProviders.length && !rentProviders.length && !buyProviders.length) ? (
-          <p className="mt-2 text-white">No streaming options available at this time.</p>
+          <p className="mt-2 text-gray-900 dark:text-white">No streaming options available at this time.</p>
         ) : (
           <div>
             {subscriptionProviders.length > 0 && (
               <div className="mb-4">
-                <h3 className="text-white text-lg font-semibold mb-2">Subscription</h3>
+                <h3 className="text-gray-900 dark:text-white text-lg font-semibold mb-2">Subscription</h3>
                 <div className="flex flex-wrap gap-3">
                   {subscriptionProviders.map((provider) => (
                     <div key={getProviderId(provider)} className="flex flex-col items-center">
@@ -124,7 +124,7 @@ const StreamingProviders: React.FC<StreamingProvidersProps> = ({ movieTitle, pro
                         className="w-12 h-12 rounded-lg shadow"
                         title={getProviderName(provider)}
                       />
-                      <span className="text-xs mt-1 text-white">{shortenProviderName(getProviderName(provider))}</span>
+                      <span className="text-xs mt-1 text-gray-900 dark:text-white">{shortenProviderName(getProviderName(provider))}</span>
                     </div>
                   ))}
                 </div>
@@ -133,7 +133,7 @@ const StreamingProviders: React.FC<StreamingProvidersProps> = ({ movieTitle, pro
 
             {rentBuyCombined.length > 0 && (
               <div className="mb-4">
-                <h3 className="text-white text-lg font-semibold mb-2">Rent/Buy</h3>
+                <h3 className="text-gray-900 dark:text-white text-lg font-semibold mb-2">Rent/Buy</h3>
                 <div className="flex flex-wrap gap-3">
                   {rentBuyCombined.map((provider) => (
                     <div key={getProviderId(provider)} className="flex flex-col items-center">
@@ -143,7 +143,7 @@ const StreamingProviders: React.FC<StreamingProvidersProps> = ({ movieTitle, pro
                         className="w-12 h-12 rounded-lg shadow"
                         title={getProviderName(provider)}
                       />
-                      <span className="text-xs mt-1 text-white">{shortenProviderName(getProviderName(provider))}</span>
+                      <span className="text-xs mt-1 text-gray-900 dark:text-white">{shortenProviderName(getProviderName(provider))}</span>
                     </div>
                   ))}
                 </div>
