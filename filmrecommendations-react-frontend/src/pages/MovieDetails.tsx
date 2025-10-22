@@ -5,7 +5,6 @@ import { useAppSelector } from '../hooks/useAppSelector';
 import { fetchMovieDetails, fetchStreamingProviders, clearCurrentMovie } from '../features/movies/moviesSlice';
 import {
   MovieHeader,
-  StreamingProviders,
   TrailerModal
 } from '../components/MovieDetails';
 import { movieService } from '../services/movieService';
@@ -153,28 +152,12 @@ const MovieDetails: React.FC = () => {
       {/* Movie Header with backdrop */}
       <MovieHeader 
         movie={currentMovie}
+        streamingProviders={streamingProviders}
         onActorClick={handleActorClick}
         onWatchTrailer={handleWatchTrailer}
         onLike={handleLike}
         onDislike={handleDislike}
       />
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row items-start md:items-start gap-8">
-          <div className="w-full md:w-1/3">
-            {/* Spacer for poster (already shown in header) */}
-          </div>
-          
-          <div className="w-full md:w-2/3 flex flex-col gap-6">
-            {/* Streaming Providers */}
-            <StreamingProviders
-              movieTitle={currentMovie.original_title}
-              providers={streamingProviders}
-            />
-          </div>
-        </div>
-      </div>
 
       {/* Trailer Modal */}
       <TrailerModal

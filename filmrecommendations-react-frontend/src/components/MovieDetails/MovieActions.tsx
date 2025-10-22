@@ -90,7 +90,7 @@ const MovieActions: React.FC<MovieActionsProps> = ({
   }`;
 
   return (
-    <div className="flex flex-col gap-2 mb-6">
+    <div className="flex flex-col gap-2 mb-2">
       <div className="flex flex-wrap gap-2">
         {/* Trailer Button */}
         <button 
