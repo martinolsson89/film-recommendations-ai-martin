@@ -1,6 +1,8 @@
 import React from 'react';
 import { movieService } from '../../services/movieService';
-import type { Movie, Genre, ProductionCountry, Director } from '../../types/movie.types';
+import type { Movie, Genre, ProductionCountry, Director, Actor } from '../../types/movie.types';
+import CastSection from './CastSection';
+import MovieActions from './MovieActions';
 
 type WithValues<T> = { $values?: T[] };
 const toArray = <T,>(input: T[] | WithValues<T> | undefined): T[] =>
@@ -36,9 +38,19 @@ const directorLabel = (d: unknown): string => {
 
 interface MovieHeaderProps {
   movie: Movie;
+  onActorClick?: (actorId: number) => void;
+  onWatchTrailer?: () => void;
+  onLike?: () => void;
+  onDislike?: () => void;
 }
 
-const MovieHeader: React.FC<MovieHeaderProps> = ({ movie }) => {
+const MovieHeader: React.FC<MovieHeaderProps> = ({ 
+  movie,
+  onActorClick,
+  onWatchTrailer,
+  onLike,
+  onDislike 
+}) => {
   const backdropStyle = movie.backdrop_path ? {
     backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.9) 100%), url(${movieService.getFullImageUrl(movie.backdrop_path)})`,
     backgroundSize: 'cover',
@@ -134,6 +146,26 @@ const MovieHeader: React.FC<MovieHeaderProps> = ({ movie }) => {
                 }
               </p>
             </div>
+
+            {/* Cast Section */}
+            <CastSection 
+              actors={(() => {
+                const src = (movie as unknown as { Actors?: Actor[] | { $values: Actor[] }; actors?: Actor[] | { $values: Actor[] } }).Actors
+                  ?? (movie as unknown as { Actors?: Actor[] | { $values: Actor[] }; actors?: Actor[] | { $values: Actor[] } }).actors;
+                return (src as Actor[] | { $values: Actor[] }) ?? { $values: [] as Actor[] };
+              })()}
+              onActorClick={onActorClick}
+            />
+
+            <hr className="border-t border-gray-300 dark:border-gray-700" />
+
+            {/* Movie Actions */}
+            <MovieActions
+              movie={movie}
+              onWatchTrailer={onWatchTrailer}
+              onLike={onLike}
+              onDislike={onDislike}
+            />
           </div>
         </div>
       </div>

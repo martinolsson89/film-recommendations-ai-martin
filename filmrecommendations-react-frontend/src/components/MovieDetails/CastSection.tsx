@@ -45,7 +45,7 @@ const CastSection: React.FC<CastSectionProps> = ({ actors, onActorClick }) => {
 
   return (
     <div className="mb-6">
-      <h3 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">Main Cast:</h3>
+      <h3 className="text-xl font-semibold mb-6 text-white">Main Cast:</h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
         {actorsArray.slice(0, 6).map((actor) => {
           const id = actorId(actor) ?? Math.random();
@@ -67,8 +67,8 @@ const CastSection: React.FC<CastSectionProps> = ({ actors, onActorClick }) => {
                   target.src = '/src/assets/default-avatar.png';
                 }}
               />
-              <p className="text-center text-sm mt-2 text-gray-900 dark:text-white">{name}</p>
-              <p className="text-center text-xs text-gray-600 dark:text-gray-400">{character}</p>
+              <p className="text-center text-sm mt-2 text-white">{name}</p>
+              <p className="text-center text-xstext-gray-400">{character}</p>
             </div>
           );
         })}

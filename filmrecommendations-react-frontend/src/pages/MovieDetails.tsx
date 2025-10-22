@@ -5,8 +5,6 @@ import { useAppSelector } from '../hooks/useAppSelector';
 import { fetchMovieDetails, fetchStreamingProviders, clearCurrentMovie } from '../features/movies/moviesSlice';
 import {
   MovieHeader,
-  CastSection,
-  MovieActions,
   StreamingProviders,
   TrailerModal
 } from '../components/MovieDetails';
@@ -64,11 +62,6 @@ const MovieDetails: React.FC = () => {
   const handleActorClick = (actorId: number) => {
     // TODO: Implement actor details modal or navigation
     console.log('Actor clicked:', actorId);
-  };
-
-  const handleAddToWatchlist = () => {
-    // TODO: Implement add to watchlist functionality
-    console.log('Add to watchlist:', currentMovie?.id);
   };
 
   const handleLike = () => {
@@ -158,7 +151,13 @@ const MovieDetails: React.FC = () => {
       </div>
 
       {/* Movie Header with backdrop */}
-      <MovieHeader movie={currentMovie} />
+      <MovieHeader 
+        movie={currentMovie}
+        onActorClick={handleActorClick}
+        onWatchTrailer={handleWatchTrailer}
+        onLike={handleLike}
+        onDislike={handleDislike}
+      />
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
@@ -168,27 +167,6 @@ const MovieDetails: React.FC = () => {
           </div>
           
           <div className="w-full md:w-2/3 flex flex-col gap-6">
-            {/* Cast Section */}
-            <CastSection 
-              actors={(() => {
-                const src = (currentMovie as unknown as { Actors?: import('../types/movie.types').Actor[] | { $values: import('../types/movie.types').Actor[] }; actors?: import('../types/movie.types').Actor[] | { $values: import('../types/movie.types').Actor[] } }).Actors
-                  ?? (currentMovie as unknown as { Actors?: import('../types/movie.types').Actor[] | { $values: import('../types/movie.types').Actor[] }; actors?: import('../types/movie.types').Actor[] | { $values: import('../types/movie.types').Actor[] } }).actors;
-                return (src as import('../types/movie.types').Actor[] | { $values: import('../types/movie.types').Actor[] }) ?? { $values: [] as import('../types/movie.types').Actor[] };
-              })()}
-              onActorClick={handleActorClick}
-            />
-
-            <hr className="border-t border-gray-300 dark:border-gray-700" />
-
-            {/* Action Buttons */}
-            <MovieActions
-              movie={currentMovie}
-              onWatchTrailer={handleWatchTrailer}
-              onAddToWatchlist={handleAddToWatchlist}
-              onLike={handleLike}
-              onDislike={handleDislike}
-            />
-
             {/* Streaming Providers */}
             <StreamingProviders
               movieTitle={currentMovie.original_title}

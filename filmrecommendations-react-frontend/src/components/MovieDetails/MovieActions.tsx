@@ -80,13 +80,13 @@ const MovieActions: React.FC<MovieActionsProps> = ({
   const likeClasses = `font-semibold py-2 px-4 border rounded transition-colors flex items-center ${
     feedback === 'like'
       ? 'bg-green-600 border-green-600 text-white'
-      : 'bg-transparent border-green-600 text-gray-900 dark:text-white hover:bg-green-700 hover:text-white hover:border-transparent'
+      : 'bg-transparent border-green-600 text-white hover:bg-green-700 hover:text-white hover:border-transparent'
   }`;
 
   const dislikeClasses = `font-semibold py-2 px-4 border rounded transition-colors flex items-center ${
     feedback === 'dislike'
       ? 'bg-red-600 border-red-600 text-white'
-      : 'bg-transparent border-red-600 text-gray-900 dark:text-white hover:bg-red-700 hover:text-white hover:border-transparent'
+      : 'bg-transparent border-red-600 text-white hover:bg-red-700 hover:text-white hover:border-transparent'
   }`;
 
   return (
@@ -95,7 +95,7 @@ const MovieActions: React.FC<MovieActionsProps> = ({
         {/* Trailer Button */}
         <button 
           onClick={onWatchTrailer}
-          className="bg-transparent hover:bg-blue-700 text-gray-900 dark:text-white font-semibold hover:text-white py-2 px-4 border border-blue-600 hover:border-transparent rounded transition-colors"
+          className="bg-transparent hover:bg-blue-700 text-white font-semibold hover:text-white py-2 px-4 border border-blue-600 hover:border-transparent rounded transition-colors"
         >
           <div className="flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 me-2" viewBox="0 0 20 20" fill="currentColor">
@@ -135,7 +135,7 @@ const MovieActions: React.FC<MovieActionsProps> = ({
       {/* Lightweight toast/feedback message */}
       <div aria-live="polite" className="min-h-0">
         {toast && (
-          <span className="inline-block text-sm text-gray-900 dark:text-gray-200 bg-gray-200/80 dark:bg-gray-700/60 px-2 py-1 rounded">
+          <span className="inline-block text-sm text-gray-200 bg-gray-700/60 px-2 py-1 rounded">
             {toast}
           </span>
         )}
