@@ -61,12 +61,36 @@ export class MovieService {
     return apiService.get<ResponsePageDto<MovieGetDto>>(`/api/Movies?pageNumber=${pageNumber}&pageSize=${pageSize}${filterParam}`, true);
   }
 
+  async getLikedMovies(pageNumber: number = 0, pageSize: number = 25, filter?: string): Promise<ResponsePageDto<MovieGetDto>> {
+    const filterParam = filter ? `&filter=${encodeURIComponent(filter)}` : '';
+    return apiService.get<ResponsePageDto<MovieGetDto>>(
+      `/api/Movies/LikedMovies?pageNumber=${pageNumber}&pageSize=${pageSize}${filterParam}`,
+      true
+    );
+  }
+
+  async getDislikedMovies(
+    pageNumber: number = 0,
+    pageSize: number = 25,
+    filter?: string
+  ): Promise<ResponsePageDto<MovieGetDto>> {
+    const filterParam = filter ? `&filter=${encodeURIComponent(filter)}` : '';
+    return apiService.get<ResponsePageDto<MovieGetDto>>(
+      `/api/Movies/DislikedMovies?pageNumber=${pageNumber}&pageSize=${pageSize}${filterParam}`,
+      true
+    );
+  }
+
   async addUserMovie(movie: MovieCUDto): Promise<MovieGetDto> {
     return apiService.post<MovieGetDto, MovieCUDto>('/api/Movies', movie, true);
   }
 
   async updateUserMovie(movie: MovieCUDto): Promise<MovieGetDto> {
     return apiService.put<MovieGetDto, MovieCUDto>('/api/Movies', movie, true);
+  }
+
+  async deleteUserMovie(movieId: string): Promise<MovieGetDto> {
+    return apiService.delete<MovieGetDto>(`/api/Movies/${movieId}`, true);
   }
 
   private async getMovieExistsByTMDbId(tmdbId: number): Promise<{ exists: boolean; movie?: MovieGetDto }> {
@@ -99,6 +123,10 @@ export class MovieService {
   // Actor details method
   async getActorDetails(actorId: number): Promise<ActorDetails> {
     return apiService.get<ActorDetails>(`/FilmRecomendations/GetActorDetails/${actorId}`);
+  }
+
+  async getProfilePicture(): Promise<string | null> {
+    return apiService.get<string | null>('/api/Movies/profile-picture', true);
   }
 }
 

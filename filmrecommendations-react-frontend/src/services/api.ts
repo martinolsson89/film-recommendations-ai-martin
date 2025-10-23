@@ -57,7 +57,16 @@ class ApiService {
       headers: requireAuth ? this.getAuthHeaders() : { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    
+
+    return this.handleResponse<T>(response);
+  }
+
+  async delete<T>(endpoint: string, requireAuth: boolean = false): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      method: 'DELETE',
+      headers: requireAuth ? this.getAuthHeaders() : { 'Content-Type': 'application/json' }
+    });
+
     return this.handleResponse<T>(response);
   }
 }
