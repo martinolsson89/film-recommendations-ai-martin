@@ -102,14 +102,14 @@ const StreamingProviders: React.FC<StreamingProvidersProps> = ({ movieTitle, pro
   }, [rentProviders, buyProviders]);
 
   return (
-    <details className="group" open={isOpen} onToggle={(e) => setIsOpen((e.target as HTMLDetailsElement).open)}>
-      <summary className="text-l font-bold cursor-pointer text-white">
-        Where can I stream {movieTitle}?
+    <details className="group cursor-pointer hover" open={isOpen} onToggle={(e) => setIsOpen((e.target as HTMLDetailsElement).open)}>
+      <summary className="text-l font-bold cursor-pointertext-white">
+        Where can I watch {movieTitle}?
       </summary>
-      <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-96' : 'max-h-0'}`}>
-        <hr className="border-t border-gray-300 dark:border-gray-700 mt-2 mb-4" />
+      <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-96 mt-4' : 'max-h-0'}`}>
+        {/* <hr className="border-t border-gray-700 mt-2 mb-4" /> */}
         {!providers || (!subscriptionProviders.length && !rentProviders.length && !buyProviders.length) ? (
-          <p className="mt-2 text-white">No streaming options available at this time.</p>
+          <p className="mt-2text-white">No streaming options available at this time.</p>
         ) : (
           <div>
             {subscriptionProviders.length > 0 && (

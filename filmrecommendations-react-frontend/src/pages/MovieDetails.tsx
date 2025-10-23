@@ -5,9 +5,6 @@ import { useAppSelector } from '../hooks/useAppSelector';
 import { fetchMovieDetails, fetchStreamingProviders, clearCurrentMovie } from '../features/movies/moviesSlice';
 import {
   MovieHeader,
-  CastSection,
-  MovieActions,
-  StreamingProviders,
   TrailerModal
 } from '../components/MovieDetails';
 import { movieService } from '../services/movieService';
@@ -64,11 +61,6 @@ const MovieDetails: React.FC = () => {
   const handleActorClick = (actorId: number) => {
     // TODO: Implement actor details modal or navigation
     console.log('Actor clicked:', actorId);
-  };
-
-  const handleAddToWatchlist = () => {
-    // TODO: Implement add to watchlist functionality
-    console.log('Add to watchlist:', currentMovie?.id);
   };
 
   const handleLike = () => {
@@ -145,11 +137,11 @@ const MovieDetails: React.FC = () => {
   return (
     <div className="bg-gray-200 text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen">
       {/* Back Button */}
-      <div className="absolute top-4 left-4 z-10">
+      <div className="absolute top-4 left-4 z-20">
         <button
           onClick={handleBackClick}
           aria-label="Back to results"
-          className="text-white border rounded-full px-2 py-2 bg-black bg-opacity-50 hover:bg-opacity-75 transition-all"
+          className="text-white border rounded-full px-2 py-2 bg-black/50 hover:bg-gray-500/70 transition-colors "
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
             <path d="M19 12H5M12 19l-7-7 7-7"/>
@@ -158,45 +150,14 @@ const MovieDetails: React.FC = () => {
       </div>
 
       {/* Movie Header with backdrop */}
-      <MovieHeader movie={currentMovie} />
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row items-start md:items-start gap-8">
-          <div className="w-full md:w-1/3">
-            {/* Spacer for poster (already shown in header) */}
-          </div>
-          
-          <div className="w-full md:w-2/3 flex flex-col gap-6">
-            {/* Cast Section */}
-            <CastSection 
-              actors={(() => {
-                const src = (currentMovie as unknown as { Actors?: import('../types/movie.types').Actor[] | { $values: import('../types/movie.types').Actor[] }; actors?: import('../types/movie.types').Actor[] | { $values: import('../types/movie.types').Actor[] } }).Actors
-                  ?? (currentMovie as unknown as { Actors?: import('../types/movie.types').Actor[] | { $values: import('../types/movie.types').Actor[] }; actors?: import('../types/movie.types').Actor[] | { $values: import('../types/movie.types').Actor[] } }).actors;
-                return (src as import('../types/movie.types').Actor[] | { $values: import('../types/movie.types').Actor[] }) ?? { $values: [] as import('../types/movie.types').Actor[] };
-              })()}
-              onActorClick={handleActorClick}
-            />
-
-            <hr className="border-t border-gray-300 dark:border-gray-700" />
-
-            {/* Action Buttons */}
-            <MovieActions
-              movie={currentMovie}
-              onWatchTrailer={handleWatchTrailer}
-              onAddToWatchlist={handleAddToWatchlist}
-              onLike={handleLike}
-              onDislike={handleDislike}
-            />
-
-            {/* Streaming Providers */}
-            <StreamingProviders
-              movieTitle={currentMovie.original_title}
-              providers={streamingProviders}
-            />
-          </div>
-        </div>
-      </div>
+      <MovieHeader 
+        movie={currentMovie}
+        streamingProviders={streamingProviders}
+        onActorClick={handleActorClick}
+        onWatchTrailer={handleWatchTrailer}
+        onLike={handleLike}
+        onDislike={handleDislike}
+      />
 
       {/* Trailer Modal */}
       <TrailerModal

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Film Recommendations</title>
+    <script>
+      // Apply saved or system dark mode preference before the app and CSS load to avoid FOUC
+      (() => {
+        try {
+          const stored = localStorage.getItem('theme');
+          const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const shouldBeDark = stored === 'dark' || (!stored && prefersDark);
+          document.documentElement.classList.toggle('dark', shouldBeDark);
+        } catch (e) {
+          // no-op
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-KtmiRty3.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-icOpUsDx.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

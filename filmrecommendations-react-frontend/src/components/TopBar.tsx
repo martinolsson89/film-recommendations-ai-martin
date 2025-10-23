@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAppSelector } from "../hooks/useAppSelector";
 import { useAppDispatch } from "../hooks/useAppDispatch";
 import LoginModal from "./LoginModal";
@@ -12,6 +12,8 @@ const TopBar: React.FC = () => {
   
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  // track theme locally to re-render icon state if needed (icons are class-based)
+  const [isDark, setIsDark] = useState<boolean | null>(null);
 
   const handleLogin = () => setShowLoginModal(true);
   const handleRegister = () => setShowRegisterModal(true);
@@ -30,6 +32,31 @@ const TopBar: React.FC = () => {
   const closeModals = () => {
     setShowLoginModal(false);
     setShowRegisterModal(false);
+  };
+
+  // Initialize theme on mount based on saved preference or system setting
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("theme");
+      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const shouldBeDark = stored === "dark" || (!stored && prefersDark);
+      document.documentElement.classList.toggle("dark", shouldBeDark);
+      setIsDark(shouldBeDark);
+    } catch {
+      // fallback: don't crash if storage is unavailable
+      setIsDark(document.documentElement.classList.contains("dark"));
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    const nowDark = !document.documentElement.classList.contains("dark");
+    document.documentElement.classList.toggle("dark", nowDark);
+    setIsDark(nowDark);
+    try {
+      localStorage.setItem("theme", nowDark ? "dark" : "light");
+    } catch {
+      // ignore storage errors
+    }
   };
 
   return (
@@ -70,7 +97,11 @@ const TopBar: React.FC = () => {
         </div>
         
         {/* Dark mode toggle */}
-        <button className="bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded ml-2 transition-colors">
+        <button
+          onClick={toggleDarkMode}
+          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          className="bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded ml-2 transition-colors"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-6 w-6 hidden dark:block"

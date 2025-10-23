@@ -4,7 +4,20 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Film Recommendations - Tailwind CSS Demo</title>
+    <title>Film Recommendations</title>
+    <script>
+      // Apply saved or system dark mode preference before the app and CSS load to avoid FOUC
+      (() => {
+        try {
+          const stored = localStorage.getItem('theme');
+          const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const shouldBeDark = stored === 'dark' || (!stored && prefersDark);
+          document.documentElement.classList.toggle('dark', shouldBeDark);
+        } catch (e) {
+          // no-op
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
