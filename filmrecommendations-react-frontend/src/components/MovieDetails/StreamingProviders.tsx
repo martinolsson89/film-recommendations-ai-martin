@@ -102,7 +102,7 @@ const StreamingProviders: React.FC<StreamingProvidersProps> = ({ movieTitle, pro
   }, [rentProviders, buyProviders]);
 
   return (
-    <details className="group" open={isOpen} onToggle={(e) => setIsOpen((e.target as HTMLDetailsElement).open)}>
+    <details className="group cursor-pointer hover" open={isOpen} onToggle={(e) => setIsOpen((e.target as HTMLDetailsElement).open)}>
       <summary className="text-l font-bold cursor-pointertext-white">
         Where can I watch {movieTitle}?
       </summary>
