@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAppSelector } from "../hooks/useAppSelector";
 import { useAppDispatch } from "../hooks/useAppDispatch";
 import LoginModal from "./LoginModal";
@@ -71,7 +72,13 @@ const TopBar: React.FC = () => {
                 </svg>
                 Welcome back!
               </div>
-              <button 
+              <Link
+                to="/profile"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors"
+              >
+                Profile
+              </Link>
+              <button
                 onClick={handleLogout}
                 className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded transition-colors"
               >

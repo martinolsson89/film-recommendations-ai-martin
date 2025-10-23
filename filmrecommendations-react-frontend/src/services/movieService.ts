@@ -69,6 +69,38 @@ export class MovieService {
     return apiService.put<MovieGetDto, MovieCUDto>('/api/Movies', movie, true);
   }
 
+  async deleteUserMovie(movieId: string): Promise<MovieGetDto> {
+    return apiService.delete<MovieGetDto>(`/api/Movies/${movieId}`, true);
+  }
+
+  async getLikedMovies(
+    pageNumber: number = 0,
+    pageSize: number = 20,
+    filter?: string
+  ): Promise<ResponsePageDto<MovieGetDto>> {
+    const filterParam = filter ? `&filter=${encodeURIComponent(filter)}` : '';
+    return apiService.get<ResponsePageDto<MovieGetDto>>(
+      `/api/Movies/LikedMovies?pageNumber=${pageNumber}&pageSize=${pageSize}${filterParam}`,
+      true
+    );
+  }
+
+  async getDislikedMovies(
+    pageNumber: number = 0,
+    pageSize: number = 20,
+    filter?: string
+  ): Promise<ResponsePageDto<MovieGetDto>> {
+    const filterParam = filter ? `&filter=${encodeURIComponent(filter)}` : '';
+    return apiService.get<ResponsePageDto<MovieGetDto>>(
+      `/api/Movies/DislikedMovies?pageNumber=${pageNumber}&pageSize=${pageSize}${filterParam}`,
+      true
+    );
+  }
+
+  async getProfilePicture(): Promise<string | null> {
+    return apiService.get<string | null>('/api/Movies/profile-picture', true);
+  }
+
   private async getMovieExistsByTMDbId(tmdbId: number): Promise<{ exists: boolean; movie?: MovieGetDto }> {
     return apiService.get<{ exists: boolean; movie?: MovieGetDto }>(`/api/Movies/exists/${tmdbId}`, true);
   }

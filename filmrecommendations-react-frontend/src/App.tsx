@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux";
 import { checkAuthStatus } from "./features/auth/authSlice";
 import HomePage from "./pages/HomePage";
 import MovieDetails from "./pages/MovieDetails";
+import ProfilePage from "./pages/ProfilePage";
 import type { AppDispatch } from "./app/store";
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/movies/:id" element={<MovieDetails />} />
+      <Route path="/profile" element={<ProfilePage />} />
     </Routes>
   );
 }
