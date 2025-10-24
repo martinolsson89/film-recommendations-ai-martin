@@ -29,10 +29,10 @@ const HomePage: React.FC = () => {
       <main className="flex-grow flex flex-col items-center px-4 md:px-16 pt-20">
         <TopPicksSection />
         <h1 className="mt-10 text-xl font-semibold mb-2 text-center dark:text-gray-100 max-w-3xl">
-          What kind of movie are you in the mood for?
+          What do you want to watch?
         </h1>
         <SearchForm onSearch={handleSearch} loading={loading} />
-        <Suggestions />
+        <Suggestions onSelect={handleSearch} />
         
         {/* Movie Results Section */}
         <div className="w-full max-w-7xl mt-8">

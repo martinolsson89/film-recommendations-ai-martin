@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAppSelector } from "../hooks/useAppSelector";
 import { useAppDispatch } from "../hooks/useAppDispatch";
 import LoginModal from "./LoginModal";
@@ -8,10 +9,14 @@ import { logoutUser } from "../features/auth/authSlice";
 
 const TopBar: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  // track theme locally to re-render icon state if needed (icons are class-based)
+  const [isDark, setIsDark] = useState<boolean | null>(null);
 
   const handleLogin = () => setShowLoginModal(true);
   const handleRegister = () => setShowRegisterModal(true);
@@ -32,19 +37,67 @@ const TopBar: React.FC = () => {
     setShowRegisterModal(false);
   };
 
+  // Initialize theme on mount based on saved preference or system setting
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("theme");
+      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const shouldBeDark = stored === "dark" || (!stored && prefersDark);
+      document.documentElement.classList.toggle("dark", shouldBeDark);
+      setIsDark(shouldBeDark);
+    } catch {
+      // fallback: don't crash if storage is unavailable
+      setIsDark(document.documentElement.classList.contains("dark"));
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    const nowDark = !document.documentElement.classList.contains("dark");
+    document.documentElement.classList.toggle("dark", nowDark);
+    setIsDark(nowDark);
+    try {
+      localStorage.setItem("theme", nowDark ? "dark" : "light");
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  const handleBackClick = () => {
+    navigate(-1);
+  };
+
+  // Show back button on profile and movie details pages
+  const showBackButton = location.pathname === '/profile' || location.pathname.startsWith('/movies/');
+
   return (
     <>
+      <div className="flex gap-3 absolute top-4 left-6 z-10">
+        {showBackButton && (
+          <button
+            onClick={handleBackClick}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+          >
+          Back
+          </button>
+        )}
+      </div>
       <div className="flex gap-3 absolute top-4 right-6 z-10">
         <div className="flex flex-wrap gap-3">
           {isAuthenticated ? (
             <>
-              <div className="flex items-center text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded">
+              <div className="hidden sm:flex items-center text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded">
                 <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                 </svg>
-                Welcome back!
+                {user?.userName ? `Welcome back, ${user.userName}!` : "Welcome back!"}
               </div>
-              <button 
+              <Link
+                to="/profile"
+                className="flex items-center rounded bg-indigo-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-indigo-500"
+              >
+                Profile
+              </Link>
+              <button
                 onClick={handleLogout}
                 className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded transition-colors"
               >
@@ -70,7 +123,11 @@ const TopBar: React.FC = () => {
         </div>
         
         {/* Dark mode toggle */}
-        <button className="bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded ml-2 transition-colors">
+        <button
+          onClick={toggleDarkMode}
+          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          className="bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded ml-2 transition-colors"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-6 w-6 hidden dark:block"

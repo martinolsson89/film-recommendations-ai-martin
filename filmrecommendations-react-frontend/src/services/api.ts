@@ -1,5 +1,5 @@
-// const API_BASE_URL = 'https://localhost:7103';
-const API_BASE_URL = 'https://film-recommendations-backend-cda7a6gybwabbhey.swedencentral-01.azurewebsites.net'
+// Use environment variable if available, fallback to production backend
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://film-recommendations-backend-cda7a6gybwabbhey.swedencentral-01.azurewebsites.net';
 
 class ApiService {
   private baseUrl: string;
@@ -57,7 +57,16 @@ class ApiService {
       headers: requireAuth ? this.getAuthHeaders() : { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    
+
+    return this.handleResponse<T>(response);
+  }
+
+  async delete<T>(endpoint: string, requireAuth: boolean = false): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      method: 'DELETE',
+      headers: requireAuth ? this.getAuthHeaders() : { 'Content-Type': 'application/json' }
+    });
+
     return this.handleResponse<T>(response);
   }
 }

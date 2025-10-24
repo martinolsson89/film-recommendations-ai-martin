@@ -1,6 +1,9 @@
 import React from 'react';
 import { movieService } from '../../services/movieService';
-import type { Movie, Genre, ProductionCountry, Director } from '../../types/movie.types';
+import type { Movie, Genre, ProductionCountry, Director, Actor, StreamingProviderResponse } from '../../types/movie.types';
+import CastSection from './CastSection';
+import MovieActions from './MovieActions';
+import StreamingProviders from './StreamingProviders';
 
 type WithValues<T> = { $values?: T[] };
 const toArray = <T,>(input: T[] | WithValues<T> | undefined): T[] =>
@@ -36,9 +39,21 @@ const directorLabel = (d: unknown): string => {
 
 interface MovieHeaderProps {
   movie: Movie;
+  streamingProviders: StreamingProviderResponse | null;
+  onActorClick?: (actorId: number) => void;
+  onWatchTrailer?: () => void;
+  onLike?: () => void;
+  onDislike?: () => void;
 }
 
-const MovieHeader: React.FC<MovieHeaderProps> = ({ movie }) => {
+const MovieHeader: React.FC<MovieHeaderProps> = ({ 
+  movie,
+  streamingProviders,
+  onActorClick,
+  onWatchTrailer,
+  onLike,
+  onDislike 
+}) => {
   const backdropStyle = movie.backdrop_path ? {
     backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.9) 100%), url(${movieService.getFullImageUrl(movie.backdrop_path)})`,
     backgroundSize: 'cover',
@@ -76,7 +91,7 @@ const MovieHeader: React.FC<MovieHeaderProps> = ({ movie }) => {
           </div>
 
           {/* Movie Info */}
-          <div className="w-full md:w-2/3 flex flex-col gap-6">
+          <div className="w-full md:w-2/3 flex flex-col gap-4">
             <div>
               {/* Rating */}
               <p className="mb-2 flex items-center font-bold">
@@ -92,15 +107,22 @@ const MovieHeader: React.FC<MovieHeaderProps> = ({ movie }) => {
               </h2>
 
               {/* Genres */}
-              <p className="mb-2">
-                <span className="font-semibold">
-                  {(() => {
-                    const genres = toArray<Genre>(movie.genres as unknown as Genre[] | WithValues<Genre>);
-                    const names = genres.map(genreLabel).filter(Boolean);
-                    return names.length > 0 ? names.join(', ') : 'N/A';
-                  })()}
-                </span>
-              </p>
+              <div className="mb-4 flex flex-wrap gap-2">
+                {(() => {
+                  const genres = toArray<Genre>(movie.genres as unknown as Genre[] | WithValues<Genre>);
+                  const names = genres.map(genreLabel).filter(Boolean);
+                  return names.length > 0 
+                    ? names.map((name, index) => (
+                        <span 
+                          key={index}
+                          className="px-3 py-1 rounded-full bg-white/20 dark:bg-white/10 text-white text-sm font-medium"
+                        >
+                          {name}
+                        </span>
+                      ))
+                    : <span className="px-3 py-1 rounded-full bg-white/20 dark:bg-white/10 text-white text-sm font-medium">N/A</span>;
+                })()}
+              </div>
 
               {/* Overview */}
               <p className="mb-4">{movie.overview}</p>
@@ -134,6 +156,34 @@ const MovieHeader: React.FC<MovieHeaderProps> = ({ movie }) => {
                 }
               </p>
             </div>
+
+            {/* Cast Section */}
+            <CastSection 
+              actors={(() => {
+                const src = (movie as unknown as { Actors?: Actor[] | { $values: Actor[] }; actors?: Actor[] | { $values: Actor[] } }).Actors
+                  ?? (movie as unknown as { Actors?: Actor[] | { $values: Actor[] }; actors?: Actor[] | { $values: Actor[] } }).actors;
+                return (src as Actor[] | { $values: Actor[] }) ?? { $values: [] as Actor[] };
+              })()}
+              onActorClick={onActorClick}
+            />
+
+            {/* <hr className="border-t border-gray-700" /> */}
+
+            {/* Movie Actions */}
+            <MovieActions
+              movie={movie}
+              onWatchTrailer={onWatchTrailer}
+              onLike={onLike}
+              onDislike={onDislike}
+            />
+
+            <hr className="border-t border-gray-700" />
+
+            {/* Streaming Providers */}
+            <StreamingProviders
+              movieTitle={movie.original_title}
+              providers={streamingProviders}
+            />
           </div>
         </div>
       </div>

@@ -37,6 +37,35 @@
             ],
             "cwd": "${workspaceFolder}/FilmRecommendations.Frontend",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "React Frontend (Chrome)",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:5173",
+            "webRoot": "${workspaceFolder}/filmrecommendations-react-frontend/src",
+            "sourceMaps": true,
+            "preLaunchTask": "npm: dev - filmrecommendations-react-frontend",
+            "userDataDir": "${workspaceFolder}/.vscode/chrome-debug-profile"
+        },
+        {
+            "name": "React Frontend (Edge)",
+            "type": "msedge",
+            "request": "launch",
+            "url": "http://localhost:5173",
+            "webRoot": "${workspaceFolder}/filmrecommendations-react-frontend/src",
+            "sourceMaps": true,
+            "preLaunchTask": "npm: dev - filmrecommendations-react-frontend",
+            "userDataDir": "${workspaceFolder}/.vscode/edge-debug-profile"
+        },
+        {
+            "name": "React Frontend (Attach)",
+            "type": "chrome",
+            "request": "attach",
+            "port": 9222,
+            "url": "http://localhost:5173",
+            "webRoot": "${workspaceFolder}/filmrecommendations-react-frontend/src",
+            "sourceMaps": true
         }
     ],
     "compounds": [

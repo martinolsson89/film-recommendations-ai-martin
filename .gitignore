@@ -4,6 +4,9 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 AGENTS.md
+MONGODB_REFACTOR.md
+RATE_LIMITING_IMPLEMENTATION.md
+
 # User-specific files
 *.rsuser
 *.suo
@@ -363,3 +366,7 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 Film-Recommendations.code-workspace
+
+# VS Code debug browser profiles
+.vscode/chrome-debug-profile/
+.vscode/edge-debug-profile/
