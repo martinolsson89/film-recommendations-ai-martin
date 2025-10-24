@@ -1,0 +1,316 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/TopBar.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=fe8bc9ef"; const Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"]; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+var _s = $RefreshSig$();
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=fe8bc9ef"; const React = __vite__cjsImport3_react.__esModule ? __vite__cjsImport3_react.default : __vite__cjsImport3_react; const useEffect = __vite__cjsImport3_react["useEffect"]; const useState = __vite__cjsImport3_react["useState"];
+import { Link } from "/node_modules/.vite/deps/react-router-dom.js?v=fe8bc9ef";
+import { useAppSelector } from "/src/hooks/useAppSelector.ts";
+import { useAppDispatch } from "/src/hooks/useAppDispatch.ts";
+import LoginModal from "/src/components/LoginModal.tsx";
+import RegisterModal from "/src/components/RegisterModal.tsx";
+import { logoutUser } from "/src/features/auth/authSlice.ts";
+const TopBar = () => {
+  _s();
+  const dispatch = useAppDispatch();
+  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [isDark, setIsDark] = useState(null);
+  const handleLogin = () => setShowLoginModal(true);
+  const handleRegister = () => setShowRegisterModal(true);
+  const handleLogout = () => dispatch(logoutUser());
+  const switchToRegister = () => {
+    setShowLoginModal(false);
+    setShowRegisterModal(true);
+  };
+  const switchToLogin = () => {
+    setShowRegisterModal(false);
+    setShowLoginModal(true);
+  };
+  const closeModals = () => {
+    setShowLoginModal(false);
+    setShowRegisterModal(false);
+  };
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("theme");
+      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const shouldBeDark = stored === "dark" || !stored && prefersDark;
+      document.documentElement.classList.toggle("dark", shouldBeDark);
+      setIsDark(shouldBeDark);
+    } catch {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    }
+  }, []);
+  const toggleDarkMode = () => {
+    const nowDark = !document.documentElement.classList.contains("dark");
+    document.documentElement.classList.toggle("dark", nowDark);
+    setIsDark(nowDark);
+    try {
+      localStorage.setItem("theme", nowDark ? "dark" : "light");
+    } catch {
+    }
+  };
+  return /* @__PURE__ */ jsxDEV(Fragment, { children: [
+    /* @__PURE__ */ jsxDEV("div", { className: "flex gap-3 absolute top-4 right-6 z-10", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "flex flex-wrap gap-3", children: isAuthenticated ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
+        /* @__PURE__ */ jsxDEV("div", { className: "flex items-center text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded", children: [
+          /* @__PURE__ */ jsxDEV("svg", { className: "w-4 h-4 mr-2", fill: "currentColor", viewBox: "0 0 20 20", children: /* @__PURE__ */ jsxDEV("path", { fillRule: "evenodd", d: "M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z", clipRule: "evenodd" }, void 0, false, {
+            fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+            lineNumber: 90,
+            columnNumber: 19
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+            lineNumber: 89,
+            columnNumber: 17
+          }, this),
+          user?.userName ? `Welcome back, ${user.userName}!` : "Welcome back!"
+        ] }, void 0, true, {
+          fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+          lineNumber: 88,
+          columnNumber: 15
+        }, this),
+        /* @__PURE__ */ jsxDEV(
+          Link,
+          {
+            to: "/profile",
+            className: "flex items-center rounded bg-indigo-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-indigo-500",
+            children: "Profile"
+          },
+          void 0,
+          false,
+          {
+            fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+            lineNumber: 94,
+            columnNumber: 15
+          },
+          this
+        ),
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            onClick: handleLogout,
+            className: "bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded transition-colors",
+            children: /* @__PURE__ */ jsxDEV("div", { className: "flex items-center", children: "Sign Out" }, void 0, false, {
+              fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+              lineNumber: 104,
+              columnNumber: 17
+            }, this)
+          },
+          void 0,
+          false,
+          {
+            fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+            lineNumber: 100,
+            columnNumber: 15
+          },
+          this
+        )
+      ] }, void 0, true, {
+        fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+        lineNumber: 87,
+        columnNumber: 11
+      }, this) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            onClick: handleLogin,
+            className: "bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded transition-colors",
+            children: /* @__PURE__ */ jsxDEV("div", { className: "flex items-center", children: "Log in" }, void 0, false, {
+              fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+              lineNumber: 113,
+              columnNumber: 17
+            }, this)
+          },
+          void 0,
+          false,
+          {
+            fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+            lineNumber: 109,
+            columnNumber: 15
+          },
+          this
+        ),
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            onClick: handleRegister,
+            className: "bg-pink-600 hover:bg-pink-500 text-white font-semibold py-2 px-4 rounded transition-colors",
+            children: /* @__PURE__ */ jsxDEV("div", { className: "flex items-center", children: "Create an account" }, void 0, false, {
+              fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+              lineNumber: 119,
+              columnNumber: 17
+            }, this)
+          },
+          void 0,
+          false,
+          {
+            fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+            lineNumber: 115,
+            columnNumber: 15
+          },
+          this
+        )
+      ] }, void 0, true, {
+        fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+        lineNumber: 108,
+        columnNumber: 11
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+        lineNumber: 85,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV(
+        "button",
+        {
+          onClick: toggleDarkMode,
+          "aria-label": isDark ? "Switch to light mode" : "Switch to dark mode",
+          className: "bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded ml-2 transition-colors",
+          children: [
+            /* @__PURE__ */ jsxDEV(
+              "svg",
+              {
+                xmlns: "http://www.w3.org/2000/svg",
+                className: "h-6 w-6 hidden dark:block",
+                viewBox: "0 0 20 20",
+                fill: "currentColor",
+                children: /* @__PURE__ */ jsxDEV("path", { d: "M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 1.78a1 1 0 011.42 1.42l-.71.71a1 1 0 01-1.42-1.42l.71-.71zM17 9a1 1 0 110 2h-1a1 1 0 110-2h1zM14.22 14.22a1 1 0 011.42 1.42l-.71.71a1 1 0 01-1.42-1.42l.71-.71zM10 15a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.22-1.78a1 1 0 00-1.42 1.42l.71.71a1 1 0 001.42-1.42l-.71-.71zM3 9a1 1 0 100 2H2a1 1 0 100-2h1zm1.78-4.22a1 1 0 00-1.42 1.42l.71.71a1 1 0 001.42-1.42l-.71-.71zM10 6a4 4 0 100 8 4 4 0 000-8z" }, void 0, false, {
+                  fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+                  lineNumber: 137,
+                  columnNumber: 13
+                }, this)
+              },
+              void 0,
+              false,
+              {
+                fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+                lineNumber: 131,
+                columnNumber: 11
+              },
+              this
+            ),
+            /* @__PURE__ */ jsxDEV(
+              "svg",
+              {
+                xmlns: "http://www.w3.org/2000/svg",
+                className: "h-6 w-6 block dark:hidden",
+                fill: "none",
+                viewBox: "0 0 24 24",
+                stroke: "currentColor",
+                children: /* @__PURE__ */ jsxDEV(
+                  "path",
+                  {
+                    strokeLinecap: "round",
+                    strokeLinejoin: "round",
+                    strokeWidth: 2,
+                    d: "M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"
+                  },
+                  void 0,
+                  false,
+                  {
+                    fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+                    lineNumber: 146,
+                    columnNumber: 13
+                  },
+                  this
+                )
+              },
+              void 0,
+              false,
+              {
+                fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+                lineNumber: 139,
+                columnNumber: 11
+              },
+              this
+            )
+          ]
+        },
+        void 0,
+        true,
+        {
+          fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+          lineNumber: 126,
+          columnNumber: 9
+        },
+        this
+      )
+    ] }, void 0, true, {
+      fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+      lineNumber: 84,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(
+      LoginModal,
+      {
+        isOpen: showLoginModal,
+        onClose: closeModals,
+        onSwitchToRegister: switchToRegister
+      },
+      void 0,
+      false,
+      {
+        fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+        lineNumber: 157,
+        columnNumber: 7
+      },
+      this
+    ),
+    /* @__PURE__ */ jsxDEV(
+      RegisterModal,
+      {
+        isOpen: showRegisterModal,
+        onClose: closeModals,
+        onSwitchToLogin: switchToLogin
+      },
+      void 0,
+      false,
+      {
+        fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+        lineNumber: 162,
+        columnNumber: 7
+      },
+      this
+    )
+  ] }, void 0, true, {
+    fileName: "C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx",
+    lineNumber: 83,
+    columnNumber: 5
+  }, this);
+};
+_s(TopBar, "7eDs0icxd8KLAtcfOiSz6XEXLEM=", false, function() {
+  return [useAppDispatch, useAppSelector];
+});
+_c = TopBar;
+export default TopBar;
+var _c;
+$RefreshReg$(_c, "TopBar");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/marti/Development/Projects/film-recommendations-ai-martin/filmrecommendations-react-frontend/src/components/TopBar.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,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QThJTixlQUFlQTtBQUFPLElBQUFvQztBQUFBQyxhQUFBRCxJQUFBIiwibmFtZXMiOlsiUmVhY3QiLCJ1c2VFZmZlY3QiLCJ1c2VTdGF0ZSIsIkxpbmsiLCJ1c2VBcHBTZWxlY3RvciIsInVzZUFwcERpc3BhdGNoIiwiTG9naW5Nb2RhbCIsIlJlZ2lzdGVyTW9kYWwiLCJsb2dvdXRVc2VyIiwiVG9wQmFyIiwiX3MiLCJkaXNwYXRjaCIsImlzQXV0aGVudGljYXRlZCIsInVzZXIiLCJzdGF0ZSIsImF1dGgiLCJzaG93TG9naW5Nb2RhbCIsInNldFNob3dMb2dpbk1vZGFsIiwic2hvd1JlZ2lzdGVyTW9kYWwiLCJzZXRTaG93UmVnaXN0ZXJNb2RhbCIsImlzRGFyayIsInNldElzRGFyayIsImhhbmRsZUxvZ2luIiwiaGFuZGxlUmVnaXN0ZXIiLCJoYW5kbGVMb2dvdXQiLCJzd2l0Y2hUb1JlZ2lzdGVyIiwic3dpdGNoVG9Mb2dpbiIsImNsb3NlTW9kYWxzIiwic3RvcmVkIiwibG9jYWxTdG9yYWdlIiwiZ2V0SXRlbSIsInByZWZlcnNEYXJrIiwid2luZG93IiwibWF0Y2hNZWRpYSIsIm1hdGNoZXMiLCJzaG91bGRCZURhcmsiLCJkb2N1bWVudCIsImRvY3VtZW50RWxlbWVudCIsImNsYXNzTGlzdCIsInRvZ2dsZSIsImNvbnRhaW5zIiwidG9nZ2xlRGFya01vZGUiLCJub3dEYXJrIiwic2V0SXRlbSIsInVzZXJOYW1lIiwiX2MiLCIkUmVmcmVzaFJlZyQiXSwiaWdub3JlTGlzdCI6W10sInNvdXJjZXMiOlsiVG9wQmFyLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgUmVhY3QsIHsgdXNlRWZmZWN0LCB1c2VTdGF0ZSB9IGZyb20gXCJyZWFjdFwiO1xyXG5pbXBvcnQgeyBMaW5rIH0gZnJvbSBcInJlYWN0LXJvdXRlci1kb21cIjtcclxuaW1wb3J0IHsgdXNlQXBwU2VsZWN0b3IgfSBmcm9tIFwiLi4vaG9va3MvdXNlQXBwU2VsZWN0b3JcIjtcclxuaW1wb3J0IHsgdXNlQXBwRGlzcGF0Y2ggfSBmcm9tIFwiLi4vaG9va3MvdXNlQXBwRGlzcGF0Y2hcIjtcclxuaW1wb3J0IExvZ2luTW9kYWwgZnJvbSBcIi4vTG9naW5Nb2RhbFwiO1xyXG5pbXBvcnQgUmVnaXN0ZXJNb2RhbCBmcm9tIFwiLi9SZWdpc3Rlck1vZGFsXCI7XHJcbmltcG9ydCB7IGxvZ291dFVzZXIgfSBmcm9tIFwiLi4vZmVhdHVyZXMvYXV0aC9hdXRoU2xpY2VcIjtcclxuLy8gdHlwZXMgbm93IHByb3ZpZGVkIHZpYSB0eXBlZCBob29rc1xyXG5cclxuY29uc3QgVG9wQmFyOiBSZWFjdC5GQyA9ICgpID0+IHtcclxuICBjb25zdCBkaXNwYXRjaCA9IHVzZUFwcERpc3BhdGNoKCk7XHJcbiAgY29uc3QgeyBpc0F1dGhlbnRpY2F0ZWQsIHVzZXIgfSA9IHVzZUFwcFNlbGVjdG9yKChzdGF0ZSkgPT4gc3RhdGUuYXV0aCk7XHJcbiAgXHJcbiAgY29uc3QgW3Nob3dMb2dpbk1vZGFsLCBzZXRTaG93TG9naW5Nb2RhbF0gPSB1c2VTdGF0ZShmYWxzZSk7XHJcbiAgY29uc3QgW3Nob3dSZWdpc3Rlck1vZGFsLCBzZXRTaG93UmVnaXN0ZXJNb2RhbF0gPSB1c2VTdGF0ZShmYWxzZSk7XHJcbiAgLy8gdHJhY2sgdGhlbWUgbG9jYWxseSB0byByZS1yZW5kZXIgaWNvbiBzdGF0ZSBpZiBuZWVkZWQgKGljb25zIGFyZSBjbGFzcy1iYXNlZClcclxuICBjb25zdCBbaXNEYXJrLCBzZXRJc0RhcmtdID0gdXNlU3RhdGU8Ym9vbGVhbiB8IG51bGw+KG51bGwpO1xyXG5cclxuICBjb25zdCBoYW5kbGVMb2dpbiA9ICgpID0+IHNldFNob3dMb2dpbk1vZGFsKHRydWUpO1xyXG4gIGNvbnN0IGhhbmRsZVJlZ2lzdGVyID0gKCkgPT4gc2V0U2hvd1JlZ2lzdGVyTW9kYWwodHJ1ZSk7XHJcbiAgY29uc3QgaGFuZGxlTG9nb3V0ID0gKCkgPT4gZGlzcGF0Y2gobG9nb3V0VXNlcigpKTtcclxuXHJcbiAgY29uc3Qgc3dpdGNoVG9SZWdpc3RlciA9ICgpID0+IHtcclxuICAgIHNldFNob3dMb2dpbk1vZGFsKGZhbHNlKTtcclxuICAgIHNldFNob3dSZWdpc3Rlck1vZGFsKHRydWUpO1xyXG4gIH07XHJcblxyXG4gIGNvbnN0IHN3aXRjaFRvTG9naW4gPSAoKSA9PiB7XHJcbiAgICBzZXRTaG93UmVnaXN0ZXJNb2RhbChmYWxzZSk7XHJcbiAgICBzZXRTaG93TG9naW5Nb2RhbCh0cnVlKTtcclxuICB9O1xyXG5cclxuICBjb25zdCBjbG9zZU1vZGFscyA9ICgpID0+IHtcclxuICAgIHNldFNob3dMb2dpbk1vZGFsKGZhbHNlKTtcclxuICAgIHNldFNob3dSZWdpc3Rlck1vZGFsKGZhbHNlKTtcclxuICB9O1xyXG5cclxuICAvLyBJbml0aWFsaXplIHRoZW1lIG9uIG1vdW50IGJhc2VkIG9uIHNhdmVkIHByZWZlcmVuY2Ugb3Igc3lzdGVtIHNldHRpbmdcclxuICB1c2VFZmZlY3QoKCkgPT4ge1xyXG4gICAgdHJ5IHtcclxuICAgICAgY29uc3Qgc3RvcmVkID0gbG9jYWxTdG9yYWdlLmdldEl0ZW0oXCJ0aGVtZVwiKTtcclxuICAgICAgY29uc3QgcHJlZmVyc0RhcmsgPSB3aW5kb3cubWF0Y2hNZWRpYSAmJiB3aW5kb3cubWF0Y2hNZWRpYShcIihwcmVmZXJzLWNvbG9yLXNjaGVtZTogZGFyaylcIikubWF0Y2hlcztcclxuICAgICAgY29uc3Qgc2hvdWxkQmVEYXJrID0gc3RvcmVkID09PSBcImRhcmtcIiB8fCAoIXN0b3JlZCAmJiBwcmVmZXJzRGFyayk7XHJcbiAgICAgIGRvY3VtZW50LmRvY3VtZW50RWxlbWVudC5jbGFzc0xpc3QudG9nZ2xlKFwiZGFya1wiLCBzaG91bGRCZURhcmspO1xyXG4gICAgICBzZXRJc0Rhcmsoc2hvdWxkQmVEYXJrKTtcclxuICAgIH0gY2F0Y2gge1xyXG4gICAgICAvLyBmYWxsYmFjazogZG9uJ3QgY3Jhc2ggaWYgc3RvcmFnZSBpcyB1bmF2YWlsYWJsZVxyXG4gICAgICBzZXRJc0RhcmsoZG9jdW1lbnQuZG9jdW1lbnRFbGVtZW50LmNsYXNzTGlzdC5jb250YWlucyhcImRhcmtcIikpO1xyXG4gICAgfVxyXG4gIH0sIFtdKTtcclxuXHJcbiAgY29uc3QgdG9nZ2xlRGFya01vZGUgPSAoKSA9PiB7XHJcbiAgICBjb25zdCBub3dEYXJrID0gIWRvY3VtZW50LmRvY3VtZW50RWxlbWVudC5jbGFzc0xpc3QuY29udGFpbnMoXCJkYXJrXCIpO1xyXG4gICAgZG9jdW1lbnQuZG9jdW1lbnRFbGVtZW50LmNsYXNzTGlzdC50b2dnbGUoXCJkYXJrXCIsIG5vd0RhcmspO1xyXG4gICAgc2V0SXNEYXJrKG5vd0RhcmspO1xyXG4gICAgdHJ5IHtcclxuICAgICAgbG9jYWxTdG9yYWdlLnNldEl0ZW0oXCJ0aGVtZVwiLCBub3dEYXJrID8gXCJkYXJrXCIgOiBcImxpZ2h0XCIpO1xyXG4gICAgfSBjYXRjaCB7XHJcbiAgICAgIC8vIGlnbm9yZSBzdG9yYWdlIGVycm9yc1xyXG4gICAgfVxyXG4gIH07XHJcblxyXG4gIHJldHVybiAoXHJcbiAgICA8PlxyXG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggZ2FwLTMgYWJzb2x1dGUgdG9wLTQgcmlnaHQtNiB6LTEwXCI+XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGZsZXgtd3JhcCBnYXAtM1wiPlxyXG4gICAgICAgICAge2lzQXV0aGVudGljYXRlZCA/IChcclxuICAgICAgICAgICAgPD5cclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIHRleHQtZ3JheS03MDAgZGFyazp0ZXh0LWdyYXktMzAwIGJnLWdyYXktMTAwIGRhcms6YmctZ3JheS03MDAgcHgtMyBweS0yIHJvdW5kZWRcIj5cclxuICAgICAgICAgICAgICAgIDxzdmcgY2xhc3NOYW1lPVwidy00IGgtNCBtci0yXCIgZmlsbD1cImN1cnJlbnRDb2xvclwiIHZpZXdCb3g9XCIwIDAgMjAgMjBcIj5cclxuICAgICAgICAgICAgICAgICAgPHBhdGggZmlsbFJ1bGU9XCJldmVub2RkXCIgZD1cIk0xMCA5YTMgMyAwIDEwMC02IDMgMyAwIDAwMCA2em0tNyA5YTcgNyAwIDExMTQgMEgzelwiIGNsaXBSdWxlPVwiZXZlbm9kZFwiIC8+XHJcbiAgICAgICAgICAgICAgICA8L3N2Zz5cclxuICAgICAgICAgICAgICAgIHt1c2VyPy51c2VyTmFtZSA/IGBXZWxjb21lIGJhY2ssICR7dXNlci51c2VyTmFtZX0hYCA6IFwiV2VsY29tZSBiYWNrIVwifVxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgIDxMaW5rXHJcbiAgICAgICAgICAgICAgICB0bz1cIi9wcm9maWxlXCJcclxuICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIHJvdW5kZWQgYmctaW5kaWdvLTYwMCBweC00IHB5LTIgZm9udC1zZW1pYm9sZCB0ZXh0LXdoaXRlIHRyYW5zaXRpb24tY29sb3JzIGhvdmVyOmJnLWluZGlnby01MDBcIlxyXG4gICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgIFByb2ZpbGVcclxuICAgICAgICAgICAgICA8L0xpbms+XHJcbiAgICAgICAgICAgICAgPGJ1dHRvblxyXG4gICAgICAgICAgICAgICAgb25DbGljaz17aGFuZGxlTG9nb3V0fVxyXG4gICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwiYmctcmVkLTYwMCBob3ZlcjpiZy1yZWQtNzAwIHRleHQtd2hpdGUgZm9udC1zZW1pYm9sZCBweS0yIHB4LTQgcm91bmRlZCB0cmFuc2l0aW9uLWNvbG9yc1wiXHJcbiAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlclwiPlNpZ24gT3V0PC9kaXY+XHJcbiAgICAgICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgICAgIDwvPlxyXG4gICAgICAgICAgKSA6IChcclxuICAgICAgICAgICAgPD5cclxuICAgICAgICAgICAgICA8YnV0dG9uIFxyXG4gICAgICAgICAgICAgICAgb25DbGljaz17aGFuZGxlTG9naW59XHJcbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJiZy1ncmF5LTYwMCBob3ZlcjpiZy1ncmF5LTUwMCB0ZXh0LXdoaXRlIGZvbnQtc2VtaWJvbGQgcHktMiBweC00IHJvdW5kZWQgdHJhbnNpdGlvbi1jb2xvcnNcIlxyXG4gICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXJcIj5Mb2cgaW48L2Rpdj5cclxuICAgICAgICAgICAgICA8L2J1dHRvbj5cclxuICAgICAgICAgICAgICA8YnV0dG9uIFxyXG4gICAgICAgICAgICAgICAgb25DbGljaz17aGFuZGxlUmVnaXN0ZXJ9XHJcbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJiZy1waW5rLTYwMCBob3ZlcjpiZy1waW5rLTUwMCB0ZXh0LXdoaXRlIGZvbnQtc2VtaWJvbGQgcHktMiBweC00IHJvdW5kZWQgdHJhbnNpdGlvbi1jb2xvcnNcIlxyXG4gICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXJcIj5DcmVhdGUgYW4gYWNjb3VudDwvZGl2PlxyXG4gICAgICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgICA8Lz5cclxuICAgICAgICAgICl9XHJcbiAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgXHJcbiAgICAgICAgey8qIERhcmsgbW9kZSB0b2dnbGUgKi99XHJcbiAgICAgICAgPGJ1dHRvblxyXG4gICAgICAgICAgb25DbGljaz17dG9nZ2xlRGFya01vZGV9XHJcbiAgICAgICAgICBhcmlhLWxhYmVsPXtpc0RhcmsgPyBcIlN3aXRjaCB0byBsaWdodCBtb2RlXCIgOiBcIlN3aXRjaCB0byBkYXJrIG1vZGVcIn1cclxuICAgICAgICAgIGNsYXNzTmFtZT1cImJnLWdyYXktMjAwIHRleHQtZ3JheS05MDAgZGFyazpiZy1ncmF5LTcwMCBkYXJrOnRleHQtZ3JheS0zMDAgcHgtMiBweS0xIHJvdW5kZWQgbWwtMiB0cmFuc2l0aW9uLWNvbG9yc1wiXHJcbiAgICAgICAgPlxyXG4gICAgICAgICAgPHN2Z1xyXG4gICAgICAgICAgICB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnXCJcclxuICAgICAgICAgICAgY2xhc3NOYW1lPVwiaC02IHctNiBoaWRkZW4gZGFyazpibG9ja1wiXHJcbiAgICAgICAgICAgIHZpZXdCb3g9XCIwIDAgMjAgMjBcIlxyXG4gICAgICAgICAgICBmaWxsPVwiY3VycmVudENvbG9yXCJcclxuICAgICAgICAgID5cclxuICAgICAgICAgICAgPHBhdGggZD1cIk0xMCAyYTEgMSAwIDAxMSAxdjFhMSAxIDAgMTEtMiAwVjNhMSAxIDAgMDExLTF6bTQuMjIgMS43OGExIDEgMCAwMTEuNDIgMS40MmwtLjcxLjcxYTEgMSAwIDAxLTEuNDItMS40MmwuNzEtLjcxek0xNyA5YTEgMSAwIDExMCAyaC0xYTEgMSAwIDExMC0yaDF6TTE0LjIyIDE0LjIyYTEgMSAwIDAxMS40MiAxLjQybC0uNzEuNzFhMSAxIDAgMDEtMS40Mi0xLjQybC43MS0uNzF6TTEwIDE1YTEgMSAwIDAxMSAxdjFhMSAxIDAgMTEtMiAwdi0xYTEgMSAwIDAxMS0xem0tNC4yMi0xLjc4YTEgMSAwIDAwLTEuNDIgMS40MmwuNzEuNzFhMSAxIDAgMDAxLjQyLTEuNDJsLS43MS0uNzF6TTMgOWExIDEgMCAxMDAgMkgyYTEgMSAwIDEwMC0yaDF6bTEuNzgtNC4yMmExIDEgMCAwMC0xLjQyIDEuNDJsLjcxLjcxYTEgMSAwIDAwMS40Mi0xLjQybC0uNzEtLjcxek0xMCA2YTQgNCAwIDEwMCA4IDQgNCAwIDAwMC04elwiIC8+XHJcbiAgICAgICAgICA8L3N2Zz5cclxuICAgICAgICAgIDxzdmdcclxuICAgICAgICAgICAgeG1sbnM9XCJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Z1wiXHJcbiAgICAgICAgICAgIGNsYXNzTmFtZT1cImgtNiB3LTYgYmxvY2sgZGFyazpoaWRkZW5cIlxyXG4gICAgICAgICAgICBmaWxsPVwibm9uZVwiXHJcbiAgICAgICAgICAgIHZpZXdCb3g9XCIwIDAgMjQgMjRcIlxyXG4gICAgICAgICAgICBzdHJva2U9XCJjdXJyZW50Q29sb3JcIlxyXG4gICAgICAgICAgPlxyXG4gICAgICAgICAgICA8cGF0aFxyXG4gICAgICAgICAgICAgIHN0cm9rZUxpbmVjYXA9XCJyb3VuZFwiXHJcbiAgICAgICAgICAgICAgc3Ryb2tlTGluZWpvaW49XCJyb3VuZFwiXHJcbiAgICAgICAgICAgICAgc3Ryb2tlV2lkdGg9ezJ9XHJcbiAgICAgICAgICAgICAgZD1cIk0yMSAxMi43OUE5IDkgMCAxMTExLjIxIDMgNyA3IDAgMDAyMSAxMi43OXpcIlxyXG4gICAgICAgICAgICAvPlxyXG4gICAgICAgICAgPC9zdmc+XHJcbiAgICAgICAgPC9idXR0b24+XHJcbiAgICAgIDwvZGl2PlxyXG5cclxuICAgICAgey8qIE1vZGFscyAqL31cclxuICAgICAgPExvZ2luTW9kYWxcclxuICAgICAgICBpc09wZW49e3Nob3dMb2dpbk1vZGFsfVxyXG4gICAgICAgIG9uQ2xvc2U9e2Nsb3NlTW9kYWxzfVxyXG4gICAgICAgIG9uU3dpdGNoVG9SZWdpc3Rlcj17c3dpdGNoVG9SZWdpc3Rlcn1cclxuICAgICAgLz5cclxuICAgICAgPFJlZ2lzdGVyTW9kYWxcclxuICAgICAgICBpc09wZW49e3Nob3dSZWdpc3Rlck1vZGFsfVxyXG4gICAgICAgIG9uQ2xvc2U9e2Nsb3NlTW9kYWxzfVxyXG4gICAgICAgIG9uU3dpdGNoVG9Mb2dpbj17c3dpdGNoVG9Mb2dpbn1cclxuICAgICAgLz5cclxuICAgIDwvPlxyXG4gICk7XHJcbn07XHJcblxyXG5leHBvcnQgZGVmYXVsdCBUb3BCYXI7Il0sImZpbGUiOiJDOi9Vc2Vycy9tYXJ0aS9EZXZlbG9wbWVudC9Qcm9qZWN0cy9maWxtLXJlY29tbWVuZGF0aW9ucy1haS1tYXJ0aW4vZmlsbXJlY29tbWVuZGF0aW9ucy1yZWFjdC1mcm9udGVuZC9zcmMvY29tcG9uZW50cy9Ub3BCYXIudHN4In0=
