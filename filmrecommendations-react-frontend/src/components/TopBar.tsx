@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAppSelector } from "../hooks/useAppSelector";
 import { useAppDispatch } from "../hooks/useAppDispatch";
 import LoginModal from "./LoginModal";
@@ -9,6 +9,8 @@ import { logoutUser } from "../features/auth/authSlice";
 
 const TopBar: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -60,13 +62,30 @@ const TopBar: React.FC = () => {
     }
   };
 
+  const handleBackClick = () => {
+    navigate(-1);
+  };
+
+  // Show back button on profile and movie details pages
+  const showBackButton = location.pathname === '/profile' || location.pathname.startsWith('/movies/');
+
   return (
     <>
+      <div className="flex gap-3 absolute top-4 left-6 z-10">
+        {showBackButton && (
+          <button
+            onClick={handleBackClick}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+          >
+          Back
+          </button>
+        )}
+      </div>
       <div className="flex gap-3 absolute top-4 right-6 z-10">
         <div className="flex flex-wrap gap-3">
           {isAuthenticated ? (
             <>
-              <div className="flex items-center text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded">
+              <div className="hidden sm:flex items-center text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded">
                 <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                 </svg>

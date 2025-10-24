@@ -8,6 +8,7 @@ import {
   TrailerModal
 } from '../components/MovieDetails';
 import { movieService } from '../services/movieService';
+import TopBar from '../components/TopBar';
 
 const MovieDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -45,10 +46,6 @@ const MovieDetails: React.FC = () => {
       dispatch(clearCurrentMovie());
     };
   }, [id, dispatch, navigate]);
-
-  const handleBackClick = () => {
-    navigate(-1);
-  };
 
   const handleWatchTrailer = () => {
     setIsTrailerModalOpen(true);
@@ -101,17 +98,14 @@ const MovieDetails: React.FC = () => {
 
   if (error) {
     return (
-      <div className="bg-gray-200 text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen flex items-center justify-center">
-        <div className="text-center p-8">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold mb-4">Error Loading Movie</h2>
-          <p className="text-lg mb-6">{error}</p>
-          <button 
-            onClick={handleBackClick}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
-          >
-            Go Back
-          </button>
+      <div className="bg-gray-200 text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen">
+        <TopBar />
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center p-8">
+            <div className="text-red-500 text-6xl mb-4">⚠️</div>
+            <h2 className="text-2xl font-bold mb-4">Error Loading Movie</h2>
+            <p className="text-lg mb-6">{error}</p>
+          </div>
         </div>
       </div>
     );
@@ -119,16 +113,13 @@ const MovieDetails: React.FC = () => {
 
   if (!currentMovie) {
     return (
-      <div className="bg-gray-200 text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen flex items-center justify-center">
-        <div className="text-center p-8">
-          <h2 className="text-2xl font-bold mb-4">Movie Not Found</h2>
-          <p className="text-lg mb-6">The requested movie could not be found.</p>
-          <button 
-            onClick={handleBackClick}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
-          >
-            Go Back
-          </button>
+      <div className="bg-gray-200 text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen">
+        <TopBar />
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center p-8">
+            <h2 className="text-2xl font-bold mb-4">Movie Not Found</h2>
+            <p className="text-lg mb-6">The requested movie could not be found.</p>
+          </div>
         </div>
       </div>
     );
@@ -136,28 +127,18 @@ const MovieDetails: React.FC = () => {
 
   return (
     <div className="bg-gray-200 text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen">
-      {/* Back Button */}
-      <div className="absolute top-4 left-4 z-20">
-        <button
-          onClick={handleBackClick}
-          aria-label="Back to results"
-          className="text-white border rounded-full px-2 py-2 bg-black/50 hover:bg-gray-500/70 transition-colors "
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <path d="M19 12H5M12 19l-7-7 7-7"/>
-          </svg>
-        </button>
-      </div>
-
+      <TopBar />
       {/* Movie Header with backdrop */}
-      <MovieHeader 
-        movie={currentMovie}
-        streamingProviders={streamingProviders}
-        onActorClick={handleActorClick}
-        onWatchTrailer={handleWatchTrailer}
-        onLike={handleLike}
-        onDislike={handleDislike}
-      />
+      <div className="pt-20">
+        <MovieHeader 
+          movie={currentMovie}
+          streamingProviders={streamingProviders}
+          onActorClick={handleActorClick}
+          onWatchTrailer={handleWatchTrailer}
+          onLike={handleLike}
+          onDislike={handleDislike}
+        />
+      </div>
 
       {/* Trailer Modal */}
       <TrailerModal
