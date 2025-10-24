@@ -121,28 +121,28 @@ export interface StreamingProviderResponse {
 
 // User movie management types
 export interface MovieGetDto {
-  MovieId?: string;
-  Title: string;
-  TMDbId?: number;
-  Liked?: boolean;
-  UserId?: string;
+  movieId?: string;
+  title: string;
+  tmDbId?: number;
+  liked?: boolean;
+  userId?: string;
 }
 
 export interface MovieCUDto {
-  MovieId?: string;
-  Title: string;
-  TMDbId?: number;
-  Liked?: boolean;
-  UserId?: string;
+  movieId?: string;
+  title: string;
+  tmDbId?: number;
+  liked?: boolean;
+  userId?: string;
 }
 
 // Paginated response type
 export interface ResponsePageDto<T> {
-  PageItems: T[];
-  DbItemsCount: number;
-  PageNr: number;
-  PageSize: number;
-  PageCount: number;
+  pageItems: T[];
+  dbItemsCount: number;
+  pageNr: number;
+  pageSize: number;
+  pageCount: number;
 }
 
 // Actor details types

@@ -26,7 +26,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         //avoiding circular references in json objects:
-        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
         options.JsonSerializerOptions.WriteIndented = true;
     });
 

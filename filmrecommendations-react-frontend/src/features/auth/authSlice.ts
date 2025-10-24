@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import { authService } from '../../services/authService';
 import type { LoginRequest, RegisterRequest, AuthResponse, User } from '../../types/auth.types';
+import { getUserFromToken } from '../../utils/jwt';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -13,7 +14,7 @@ interface AuthState {
 const token = localStorage.getItem('authToken');
 const initialState: AuthState = {
   isAuthenticated: !!token,
-  user: token ? { id: 'user', email: '', userName: '' } : null,
+  user: token ? getUserFromToken(token) : null,
   token,
   loading: false,
   error: null
@@ -65,7 +66,7 @@ export const checkAuthStatus = createAsyncThunk(
       }
       
       // Simple token presence check - backend handles validation
-      return { token, userId: 'authenticated-user' };
+      return { token, userId: getUserFromToken(token).id };
     } catch (error) {
       localStorage.removeItem('authToken');
       return rejectWithValue(error instanceof Error ? error.message : 'Authentication check failed');
@@ -82,11 +83,9 @@ const authSlice = createSlice({
     },
     setCredentials: (state, action: PayloadAction<AuthResponse>) => {
       state.token = action.payload.token;
-      state.user = { 
-        id: action.payload.userId, 
-        email: '', // Will be updated when we get user profile
-        userName: '' 
-      };
+      state.user = getUserFromToken(action.payload.token, {
+        id: action.payload.userId
+      });
       state.isAuthenticated = true;
       state.error = null;
     }
@@ -102,11 +101,9 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.token = action.payload.token;
-        state.user = { 
-          id: action.payload.userId, 
-          email: '', 
-          userName: '' 
-        };
+        state.user = getUserFromToken(action.payload.token, {
+          id: action.payload.userId
+        });
         state.error = null;
       })
       .addCase(loginUser.rejected, (state, action) => {
@@ -126,11 +123,9 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.token = action.payload.token;
-        state.user = { 
-          id: action.payload.userId, 
-          email: '', 
-          userName: '' 
-        };
+        state.user = getUserFromToken(action.payload.token, {
+          id: action.payload.userId
+        });
         state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {
@@ -154,11 +149,9 @@ const authSlice = createSlice({
       .addCase(checkAuthStatus.fulfilled, (state, action) => {
         state.isAuthenticated = true;
         state.token = action.payload.token;
-        state.user = { 
-          id: action.payload.userId, 
-          email: '', 
-          userName: '' 
-        };
+        state.user = getUserFromToken(action.payload.token, {
+          id: action.payload.userId
+        });
       })
       .addCase(checkAuthStatus.rejected, (state) => {
         state.isAuthenticated = false;
