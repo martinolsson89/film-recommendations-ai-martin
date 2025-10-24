@@ -36,6 +36,28 @@
                 "${workspaceFolder}/Film Recommendations.sln"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "npm: dev - filmrecommendations-react-frontend",
+            "type": "npm",
+            "script": "dev",
+            "path": "filmrecommendations-react-frontend/",
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "custom",
+                "pattern": {
+                    "regexp": "^$"
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "VITE.*preparing",
+                    "endsPattern": "(Local|Network):.*http://localhost:5173"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
         }
     ]
 }

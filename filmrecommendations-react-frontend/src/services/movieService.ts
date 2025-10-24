@@ -99,17 +99,17 @@ export class MovieService {
 
   private async upsertLiked(tmdbId: number, title: string, liked: boolean): Promise<MovieGetDto> {
     const existsResp = await this.getMovieExistsByTMDbId(tmdbId);
-    if (existsResp.exists && existsResp.movie?.MovieId) {
+    if (existsResp.exists && existsResp.movie?.movieId) {
       // Update existing record
       return this.updateUserMovie({
-        MovieId: existsResp.movie.MovieId,
-        Title: title,
-        TMDbId: tmdbId,
-        Liked: liked
+        movieId: existsResp.movie.movieId,
+        title: title,
+        tmDbId: tmdbId,
+        liked: liked
       });
     }
     // Create new record
-    return this.addUserMovie({ Title: title, TMDbId: tmdbId, Liked: liked });
+    return this.addUserMovie({ title: title, tmDbId: tmdbId, liked: liked });
   }
 
   async likeMovie(tmdbId: number, title: string): Promise<MovieGetDto> {

@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, type JSX } from "react";
 import { useDispatch } from "react-redux";
 import { checkAuthStatus } from "./features/auth/authSlice";
 import HomePage from "./pages/HomePage";

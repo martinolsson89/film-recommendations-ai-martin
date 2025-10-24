@@ -35,18 +35,32 @@ export const fetchUserProfile = createAsyncThunk<UserProfilePayload, void, { rej
   'userProfile/fetchUserProfile',
   async (_, { rejectWithValue }) => {
     try {
+      console.log('🔍 Fetching user profile...');
+      
       const [liked, disliked, profilePicture] = await Promise.all([
         movieService.getLikedMovies(0, 50),
         movieService.getDislikedMovies(0, 50),
         movieService.getProfilePicture()
       ]);
 
-      return {
-        liked: liked.PageItems ?? [],
-        disliked: disliked.PageItems ?? [],
+      console.log('📦 Raw liked response:', liked);
+      console.log('📦 Raw disliked response:', disliked);
+      console.log('📦 liked.pageItems:', liked.pageItems);
+      console.log('📦 disliked.pageItems:', disliked.pageItems);
+
+      const payload = {
+        liked: liked.pageItems ?? [],
+        disliked: disliked.pageItems ?? [],
         profilePicture: profilePicture ?? null
       };
+
+      console.log('✅ Final payload:', payload);
+      console.log('✅ Liked count:', payload.liked.length);
+      console.log('✅ Disliked count:', payload.disliked.length);
+
+      return payload;
     } catch (error) {
+      console.error('❌ Error fetching profile:', error);
       return rejectWithValue(error instanceof Error ? error.message : 'Failed to load profile');
     }
   }
@@ -80,11 +94,14 @@ const userSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchUserProfile.fulfilled, (state, action) => {
+        console.log('🎯 Redux fulfilled - payload:', action.payload);
         state.loading = false;
         state.likedMovies = action.payload.liked;
         state.dislikedMovies = action.payload.disliked;
         state.profilePicture = action.payload.profilePicture;
         state.initialized = true;
+        console.log('🎯 Redux state updated - likedMovies:', state.likedMovies.length);
+        console.log('🎯 Redux state updated - dislikedMovies:', state.dislikedMovies.length);
       })
       .addCase(fetchUserProfile.rejected, (state, action) => {
         state.loading = false;
@@ -96,10 +113,10 @@ const userSlice = createSlice({
         }
       })
       .addCase(removeUserMovie.fulfilled, (state, action) => {
-        state.removingIds = state.removingIds.filter((id) => id !== action.payload.MovieId && id !== action.meta.arg);
-        const removedId = action.payload.MovieId ?? action.meta.arg;
-        state.likedMovies = state.likedMovies.filter((movie) => movie.MovieId !== removedId);
-        state.dislikedMovies = state.dislikedMovies.filter((movie) => movie.MovieId !== removedId);
+        state.removingIds = state.removingIds.filter((id) => id !== action.payload.movieId && id !== action.meta.arg);
+        const removedId = action.payload.movieId ?? action.meta.arg;
+        state.likedMovies = state.likedMovies.filter((movie) => movie.movieId !== removedId);
+        state.dislikedMovies = state.dislikedMovies.filter((movie) => movie.movieId !== removedId);
         state.error = null;
       })
       .addCase(removeUserMovie.rejected, (state, action) => {

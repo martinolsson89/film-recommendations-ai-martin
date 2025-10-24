@@ -366,3 +366,7 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 Film-Recommendations.code-workspace
+
+# VS Code debug browser profiles
+.vscode/chrome-debug-profile/
+.vscode/edge-debug-profile/

@@ -36,8 +36,8 @@ const ProfilePage: React.FC = () => {
     return (
       <ul className="space-y-3">
         {movies.map((movie, index) => {
-          const movieId = movie.MovieId ?? "";
-          const movieKey = movie.MovieId ?? `${movie.TMDbId ?? movie.Title}-${index}`;
+          const movieId = movie.movieId ?? "";
+          const movieKey = movie.movieId ?? `${movie.tmDbId ?? movie.title}-${index}`;
           const isRemoving = movieId ? removingIds.includes(movieId) : false;
           return (
             <li
@@ -45,18 +45,18 @@ const ProfilePage: React.FC = () => {
               className="flex items-center justify-between rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 shadow-sm"
             >
               <div>
-                <p className="font-semibold text-gray-900 dark:text-gray-100">{movie.Title}</p>
-                {movie.TMDbId ? (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">TMDb ID: {movie.TMDbId}</p>
+                <p className="font-semibold text-gray-900 dark:text-gray-100">{movie.title}</p>
+                {movie.tmDbId ? (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">TMDb ID: {movie.tmDbId}</p>
                 ) : null}
               </div>
               <button
                 type="button"
-                onClick={() => handleRemove(movie.MovieId)}
-                disabled={!movie.MovieId || isRemoving}
+                onClick={() => handleRemove(movie.movieId)}
+                disabled={!movie.movieId || isRemoving}
                 className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300"
               >
-                {isRemoving ? "Removing..." : movie.MovieId ? "Remove" : "Not removable"}
+                {isRemoving ? "Removing..." : movie.movieId ? "Remove" : "Not removable"}
               </button>
             </li>
           );
