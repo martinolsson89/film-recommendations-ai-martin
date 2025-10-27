@@ -47,7 +47,7 @@ namespace FilmRecomendations.Services
             }
 
             // Initialize the chat client with GROK.
-            return new ChatClient("grok-4-0709", credential, baseURL);
+            return new ChatClient("grok-3", credential, baseURL);
 
             // Initialize the chat client with GPT.
             // return new ChatClient("gpt-4o-mini", apiKey);
@@ -115,7 +115,7 @@ namespace FilmRecomendations.Services
 
             var completionOptions = new ChatCompletionOptions
             {
-                Temperature = 0.7f,
+                Temperature = 0.3f,
             };
 
             ChatCompletion chatCompletion = await _chatClient.CompleteChatAsync(messages, completionOptions);
