@@ -1,4 +1,4 @@
-# Film Recommendations
+# Film Recommendations AI 
 
 ## Project Overview
 
@@ -10,9 +10,7 @@
 
 - **Movie Details and TMDB Integration:** For each recommended title, the app fetches detailed information from TMDB. Users can click on a recommended movie to view details such as the synopsis, release year, cast and crew (directors, actors), trailers, and even streaming provider information (where available). High-quality poster images are displayed via TMDB’s image API.
 
-- **Actor Biography Summaries:** When viewing an actor’s details, the app uses the AI service to generate a concise biography summary (150-200 words) of the actor’s career highlights. This gives users a quick overview of an actor’s background and achievements in a succinct format.
-
-- **User Accounts and Watchlist:** The application supports user registration and login. Logged-in users can maintain a personal watchlist or mark movies as liked/disliked. This feature is backed by a database, allowing the app to store user preferences. For example, you can save movies you plan to watch later or get improved recommendations based on liked movies in future iterations.
+- **User Accounts:** The application supports user registration and login. Logged-in users can mark movies as liked/disliked. This feature is backed by a database, allowing the app to store user preferences. For example, you can get improved recommendations based on liked and disliked movies in future iterations.
 
 - **Responsive and Themed UI:** The front-end is built with a responsive design in mind, using Tailwind CSS for styling. It includes a light/dark mode toggle for user convenience. The interface is user-friendly, with suggestion chips (predefined example queries) to inspire user prompts and modal dialogs for login/register forms for create account.
 
@@ -24,7 +22,7 @@ Follow these steps to set up the development environment and run the application
 
 1. **Clone the Repository:**  
    ```bash
-   git clone https://github.com/gabrielvik/Film-Recommendations.git
+   git clone https://github.com/martinolsson89/film-recommendations-ai-martin.git
    cd film-recommendations
    ```
 
