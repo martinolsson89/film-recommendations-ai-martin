@@ -28,29 +28,40 @@ Follow these steps to set up the development environment and run the application
    cd film-recommendations
    ```
 
-2. **Install Backend Dependencies:**  
-   Ensure you have the **.NET SDK (7.0 or later)** installed. The backend is an ASP.NET Core Web API targeting .NET 9.0 (if .NET 9 is not available, .NET 8 should work with minor adjustments).  
-   - Open the solution file `Film Recommendations.sln` in Visual Studio **or** navigate to the backend project directory and restore packages via command line:  
+2. **Install Backend Dependencies:**
+   Ensure you have the **.NET SDK (9.0 or later)** installed. The backend is an ASP.NET Core Web API targeting .NET 9.
+   - Open the solution file `Film Recommendations.sln` in Visual Studio **or** navigate to the backend project directory and restore packages via command line:
      ```bash
      dotnet restore
-     ```  
-   - The project uses Entity Framework Core with SQL Server. Make sure you have SQL Server or **LocalDB** running, or update the connection string (see **Configuration** below) to point to your database server. 
+     ```
+   - The API persists data in **MongoDB** (no Entity Framework). Confirm you have access to a MongoDB instance you can connect to (local Docker container, MongoDB Atlas cluster, etc.).
 
-3. **Install Frontend Dependencies:**  
-   The front-end is a modern JavaScript application (built with Vite and Tailwind CSS). Ensure you have **Node.js** (v16+ recommended) and npm installed. Then install the front-end dependencies:  
-   ```bash
-   cd FilmRecommendations.Frontend
-   npm install
-   ```  
-   This will pull in required packages (like Vite, Tailwind, etc.) as specified in `package.json`.
+3. **Install Frontend Dependencies:**
+   The actively developed frontend lives in **`filmrecommendations-react-frontend/`** and is built with **React 19**, **TypeScript**, **Vite**, **Redux Toolkit**, **React Router**, and **Tailwind CSS**.
+   - Ensure you have **Node.js 18+** and npm installed.
+   - Install the dependencies:
+     ```bash
+     cd filmrecommendations-react-frontend
+     npm install
+     ```
+   - Helpful npm scripts:
+     - `npm run dev` – start the Vite development server on `http://localhost:5173`.
+     - `npm run build` – generate a production build (runs TypeScript build + Vite).
+     - `npm run lint` – run ESLint (please execute before committing).
+     - `npm run preview` – preview the production build.
 
-4. **Configuration (API Keys and Connection Strings):**  
-   The application requires API keys for TMDB and the AI service, as well as a database connection string for user accounts. These should be provided as configuration values:  
-   - **TMDB API Key:** Sign up for a free account at TMDB and obtain an API key from your account settings.  
-   - **OpenAI API Key (or AI service key):** If using OpenAI’s API, get an API key from the [OpenAI platform](https://platform.openai.com/). (The project is configured to use an AI service; by default it expects a key for an AI model. You can use an OpenAI API key here.)  
-   - **Database Connection:** Prepare a connection string for a SQL database. For example, if using LocalDB on Windows, your connection string might look like:  
-     \`"FilmConnectionString": "Server=(localdb)\\MSSQLLocalDB;Database=FilmRecommendations;Trusted_Connection=True;"\`.  
-   - **JWT Secret:** The app uses JSON Web Tokens for authentication. You should set a JWT signing key and issuer/audience. For example, in configuration:  
+4. **Configuration (API Keys and Environment Variables):**
+   The application requires API keys for TMDB and the AI service, plus MongoDB connection information. These should be provided as configuration values:
+   - **TMDB API Key:** Sign up for a free account at TMDB and obtain an API key from your account settings.
+   - **OpenAI API Key (or AI service key):** If using OpenAI’s API, get an API key from the [OpenAI platform](https://platform.openai.com/). (The project is configured to use an AI service; by default it expects a key for an AI model. You can use an OpenAI API key here.)
+   - **MongoDB Connection:** Provide a MongoDB connection string and database name that the API can use. For local development you can use a MongoDB Atlas URI or a local instance such as:
+     ```
+     "MongoDB": {
+       "ConnectionString": "mongodb://localhost:27017",
+       "DatabaseName": "FilmRecommendations"
+     }
+     ```
+   - **JWT Secret:** The app uses JSON Web Tokens for authentication. You should set a JWT signing key and issuer/audience. For example, in configuration:
      ```json
      "Jwt": {
        "Issuer": "ExamFilmRecApp",
@@ -60,7 +71,7 @@ Follow these steps to set up the development environment and run the application
      ```
 
    **How to supply these values:** You have a few options:
-   - Create a file `FilmRecomendations.WebApi/appsettings.Development.json` (gitignored) with the required keys and settings. For example:  
+   - Create a file `FilmRecomendations.WebApi/appsettings.Development.json` (gitignored) with the required keys and settings. For example:
      ```json
      {
        "OpenAI": { "ApiKey": "YOUR_OPENAI_KEY" },
@@ -71,12 +82,13 @@ Follow these steps to set up the development environment and run the application
          "Audience": "ExamFilmRecAppUsers",
          "Key": "YOUR_SUPER_SECRET_KEY"
        },
-       "ConnectionStrings": {
-         "FilmConnectionString": "Server=(localdb)\\MSSQLLocalDB;Database=FilmRecommendations;Trusted_Connection=True;"
+       "MongoDB": {
+         "ConnectionString": "mongodb://localhost:27017",
+         "DatabaseName": "FilmRecommendations"
        }
      }
      ```
-   - **Or,** use environment variables or .NET Secret Manager to store these values. The application reads configuration values and sets environment variables at startup. For instance, you can set environment variables `TMDb:ApiKey`, `OpenAI:ApiKey`, `GROK_API_KEY`, etc.  
+   - **Or,** use environment variables or .NET Secret Manager to store these values. The API reads configuration values and maps them to environment variables at startup. Set variables such as `TMDb:ApiKey`, `OpenAI:ApiKey`, `GROK:ApiKey`, `MongoDB:ConnectionString`, `MongoDB:DatabaseName`, `Jwt:Key`, `Jwt:Issuer`, and `Jwt:Audience` (respecting the colon-separated syntax supported by ASP.NET Core on your platform).
 
 5. **Run the Backend (Web API):**  
    Once configuration is in place, start the ASP.NET Core Web API. You can do this in Visual Studio by running the FilmRecomendations.WebApi project, or via command line:  
@@ -85,11 +97,11 @@ Follow these steps to set up the development environment and run the application
    ```  
    This will launch the server, typically listening on `https://localhost:7103`. Verify by visiting `https://localhost:7103/swagger`.
 
-6. **Run the Frontend (Development Server):**  
-   In a separate terminal, start the front-end development server:  
+6. **Run the Frontend (Development Server):**
+   In a separate terminal, start the React frontend dev server from `filmrecommendations-react-frontend/`:
    ```bash
    npm run dev
-   ```  
+   ```
    This starts Vite’s dev server (default `http://localhost:5173`). Ensure the backend is running so API calls succeed.
 
 7. **Build (optional):**  
@@ -125,10 +137,10 @@ Now you have both servers running: the Web API (backend) and the Vite dev server
 
 ## Technologies Used
 
-- **Backend:** C#, .NET 6+ (ASP.NET Core Web API), Entity Framework Core, SQL Server, ASP.NET Identity, JWT, Swashbuckle (Swagger).
-- **Frontend:** JavaScript (ES6 modules), Vite, Tailwind CSS, Fetch API, responsive design, dark/light mode.
-- **APIs & Services:** TMDB API (movie data and images), OpenAI API (GPT for recommendations and summaries).
-- **Database:** SQL Server (LocalDB/Express) with EF Core migrations.
+- **Backend:** C#, .NET 9 (ASP.NET Core Web API), MongoDB Driver, ASP.NET Identity password hashing, JWT authentication, Swashbuckle (Swagger).
+- **Frontend:** React 19, TypeScript, Vite, Redux Toolkit, React Router, Tailwind CSS.
+- **APIs & Services:** TMDB API (movie data and images), OpenAI/Grok API (AI-generated recommendations and summaries).
+- **Database:** MongoDB (configured via `MongoDB:ConnectionString` and `MongoDB:DatabaseName`).
 - **Authentication:** JSON Web Tokens (JWT) for secure API access.
 
 ## Documentation and Deployment Links
