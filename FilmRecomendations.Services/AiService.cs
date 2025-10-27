@@ -47,7 +47,7 @@ namespace FilmRecomendations.Services
             }
 
             // Initialize the chat client with GROK.
-            return new ChatClient("grok-2-latest", credential, baseURL);
+            return new ChatClient("grok-4-0709", credential, baseURL);
 
             // Initialize the chat client with GPT.
             // return new ChatClient("gpt-4o-mini", apiKey);
