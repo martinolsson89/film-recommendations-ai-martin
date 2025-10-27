@@ -47,7 +47,7 @@ namespace FilmRecomendations.Services
             }
 
             // Initialize the chat client with GROK.
-            return new ChatClient("grok-3", credential, baseURL);
+            return new ChatClient("grok-4-fast-reasoning-latest", credential, baseURL);
 
             // Initialize the chat client with GPT.
             // return new ChatClient("gpt-4o-mini", apiKey);
@@ -76,7 +76,7 @@ namespace FilmRecomendations.Services
                     }
                     moviesStringBuilder.Append("\n");
                 }
-                moviesStringBuilder.Append("Dont recommend liked movies, disliked movies, or movies allready on watchlist, consider users likes and dislikes in your search for movies to recommend. \n");
+                moviesStringBuilder.Append("Don't recommend liked movies, disliked movies, or movies already on watchlist, consider users likes and dislikes in your search for movies to recommend. \n");
             }
             else
             {
@@ -115,7 +115,7 @@ namespace FilmRecomendations.Services
 
             var completionOptions = new ChatCompletionOptions
             {
-                Temperature = 0.3f,
+                Temperature = 0.3f
             };
 
             ChatCompletion chatCompletion = await _chatClient.CompleteChatAsync(messages, completionOptions);
