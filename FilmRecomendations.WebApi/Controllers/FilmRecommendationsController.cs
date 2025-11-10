@@ -67,8 +67,8 @@ public class FilmRecomendationsController : ControllerBase
                 return BadRequest("Prompt is required");
             }
 
-            var recommendationsJson = await _aiService.GetMovieRecommendationsAsync(prompt, movies);
-            return Content(recommendationsJson, "application/json");
+            var recommendations = await _aiService.GetMovieRecommendationsAsync(prompt, movies);
+            return Ok(recommendations);
         }
         catch (Exception ex)
         {
@@ -259,47 +259,47 @@ public class FilmRecomendationsController : ControllerBase
         }
     }
 
-    [HttpGet("GetSummarizedActorDetails/{actorId}")]
-    public async Task<IActionResult> GetSummarizedActorDetails(int actorId)
-    {
-        try
-        {
-            if (actorId <= 0)
-            {
-                return BadRequest("Valid actor ID is required");
-            }
+    // [HttpGet("GetSummarizedActorDetails/{actorId}")]
+    // public async Task<IActionResult> GetSummarizedActorDetails(int actorId)
+    // {
+    //     try
+    //     {
+    //         if (actorId <= 0)
+    //         {
+    //             return BadRequest("Valid actor ID is required");
+    //         }
 
-            // First get the full actor details from TMDB
-            var actorDetails = await _tmdbService.GetActorDetailsAsync(actorId);
+    //         // First get the full actor details from TMDB
+    //         var actorDetails = await _tmdbService.GetActorDetailsAsync(actorId);
 
-            if (actorDetails == null)
-            {
-                return NotFound($"No details found for actor ID: {actorId}");
-            }
+    //         if (actorDetails == null)
+    //         {
+    //             return NotFound($"No details found for actor ID: {actorId}");
+    //         }
 
-            // If there's a biography to summarize, generate a summary
-            if (!string.IsNullOrWhiteSpace(actorDetails.Biography) &&
-                actorDetails.Biography != "No biography available.")
-            {
-                _logger.LogInformation($"Requesting summary for actor {actorDetails.Name} (ID: {actorId})");
+    //         // If there's a biography to summarize, generate a summary
+    //         if (!string.IsNullOrWhiteSpace(actorDetails.Biography) &&
+    //             actorDetails.Biography != "No biography available.")
+    //         {
+    //             _logger.LogInformation($"Requesting summary for actor {actorDetails.Name} (ID: {actorId})");
 
-                // Get the AI-generated summary
-                string summarizedBiography = await _aiService.GetActorBiographySummaryAsync(
-                    actorDetails.Biography,
-                    actorDetails.Name);
+    //             // Get the AI-generated summary
+    //             string summarizedBiography = await _aiService.GetActorBiographySummaryAsync(
+    //                 actorDetails.Biography,
+    //                 actorDetails.Name);
 
-                // Replace the original biography with the summary
-                actorDetails.Biography = summarizedBiography;
-            }
+    //             // Replace the original biography with the summary
+    //             actorDetails.Biography = summarizedBiography;
+    //         }
 
-            return Ok(actorDetails);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error fetching summarized actor details.");
-            return StatusCode(500, "An error occurred while fetching summarized actor details.");
-        }
-    }
+    //         return Ok(actorDetails);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "Error fetching summarized actor details.");
+    //         return StatusCode(500, "An error occurred while fetching summarized actor details.");
+    //     }
+    // }
 
     private string? GetCurrentUserId()
     {

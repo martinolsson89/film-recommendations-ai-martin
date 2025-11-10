@@ -1,253 +1,210 @@
 ﻿using Microsoft.Extensions.Logging;
 using FilmRecomendations.Models.DTOs;
 using OpenAI.Chat;
-using System.ClientModel;
-using System.Net.Http;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
-using System.Web;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 
 namespace FilmRecomendations.Services
 {
     public class AiService : IAiService
     {
         private readonly ChatClient _chatClient;
-        private ITMDBService _tmdbService;
+        private readonly ITMDBService _tmdbService;
         private readonly ILogger<AiService> _logger;
+        private readonly IMemoryCache _cache;
+        private readonly AiOptions _options;
 
-         private readonly IConfiguration _configuration;
-
-        public AiService(ITMDBService tmdbService, ILogger<AiService> logger, IConfiguration configuration)
+        private static readonly JsonSerializerOptions JsonOpts = new()
         {
-            _chatClient = InitializeChatClient();
+            PropertyNameCaseInsensitive = true
+        };
+
+        public AiService(
+            ChatClient chatClient,
+            ITMDBService tmdbService,
+            ILogger<AiService> logger,
+            IMemoryCache cache,
+            IOptions<AiOptions> options)
+        {
+            _chatClient = chatClient;
             _tmdbService = tmdbService;
             _logger = logger;
-            _configuration = configuration;
+            _cache = cache;
+            _options = options.Value;
         }
 
-        private ChatClient InitializeChatClient()
+        public async Task<IReadOnlyList<MovieDetail>> GetMovieRecommendationsAsync(
+        string prompt, List<MovieGetDto>? userMovies, CancellationToken ct = default)
         {
-            // string apiKey = Environment.GetEnvironmentVariable("GROK_API_KEY");
-            // string apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+            var context = BuildUserContext(userMovies);
 
-            // Set up the API key and endpoint for GROK.
-            var apiKey = Environment.GetEnvironmentVariable("GROK_API_KEY");
-            // var apiKey = _configuration["GROK:ApiKey"];
-            var credential = new ApiKeyCredential(apiKey);
-            var baseURL = new OpenAI.OpenAIClientOptions
-            {
-                Endpoint = new Uri("https://api.x.ai/v1")
-            };
 
-            if (string.IsNullOrEmpty(apiKey))
-            {
-                throw new InvalidOperationException("API key for GROK is not set in the environment variables.");
-            }
+            var sys = new SystemChatMessage($$"""
+            You are a movie recommender. Output ONLY valid JSON: an array of objects:
+            [ { "movie_name": string, "release_year": number }, ... ]
 
-            // Initialize the chat client with GROK.
-            return new ChatClient("grok-4-fast-reasoning-latest", credential, baseURL);
+            Rules:
+            1) Use the user's LIKED titles as positive anchors. Infer at least these traits: genres, tone, pacing, themes, era/decade, and notable creators (directors, writers, actors).
+            2) Prefer candidates that match ≥2 inferred traits from LIKED (stronger matches rank higher).
+            3) Penalize overlap with DISLIKED traits (genre/tone/pacing/themes/creators).
+            4) EXCLUDE any title present in "Blocklist" (liked/disliked/watchlist), remakes of them, or direct sequels unless the user explicitly asked for them.
+            5) Balance: ~70% similar-to-liked, ~30% novel but compatible with liked traits (diversity across decades/regions/creators).
+            6) Limit to {{_options.MaxRecommendations}} items maximum.
+            7) Respond with JSON only. No markdown or commentary.
 
-            // Initialize the chat client with GPT.
-            // return new ChatClient("gpt-4o-mini", apiKey);
-        }
+            Return format example:
+            [
+                { "movie_name": "Name 1", "release_year": 2000 },
+                { "movie_name": "Name 2", "release_year": 2015 }
+            ]
+            """);
 
-        public async Task<string> GetMovieRecommendationsAsync(string prompt, List<MovieGetDto>? userMovies)
-        {
-            StringBuilder moviesStringBuilder = new StringBuilder();
-            if (userMovies != null && userMovies.Count > 0)
-            {
-                moviesStringBuilder.Append("Consider the following information about the users movie taste:\n");
-                foreach (var movie in userMovies)
-                {
-                    moviesStringBuilder.Append($"- {movie.Title} -");
-                    if (movie.Liked is null)
-                    {
-                        moviesStringBuilder.Append(" already on watchlist");
-                    }
-                    else if (movie.Liked == true)
-                    {
-                        moviesStringBuilder.Append(" liked");
-                    }
-                    else if (movie.Liked == false)
-                    {
-                        moviesStringBuilder.Append(" disliked");
-                    }
-                    moviesStringBuilder.Append("\n");
-                }
-                moviesStringBuilder.Append("Don't recommend liked movies, disliked movies, or movies already on watchlist, consider users likes and dislikes in your search for movies to recommend. \n");
-            }
-            else
-            {
-                moviesStringBuilder.Append("");
-            }
-            string moviesString = moviesStringBuilder.ToString();
-            var messages = new List<ChatMessage>
-            {
-                new SystemChatMessage(
-                    "You are a movie recommendation assistant. When given a movie description, " +
-                    "you must return raw JSON only any number of movies that are similar to the input description and nothing else. The output must be a valid JSON array " +
-                    "of objects in the following exact format (do not include any markdown, explanation, or extra text):\n\n" +
-                    "[\n" +
-                    "  {\n" +
-                    "    \"movie_name\": \"Name of the movie\",\n" +
-                    "    \"release_year\": 2000\n" +
-                    "  },\n" +
-                    "  {\n" +
-                    "    \"movie_name\": \"Name of the movie 2\",\n" +
-                    "    \"release_year\": 2001\n" +
-                    "  }\n" +
-                    "]\n\n" +
-                    "Make sure that your entire output is only this JSON without any additional commentary."
-                ),
-                new UserChatMessage(moviesString),
-                new UserChatMessage(prompt)
-            };
 
-#if DEBUG
-            _logger.LogInformation("Sending prompt to AI");
-            foreach (var message in messages)
-            {
-                _logger.LogInformation("{message}", message.Content.ToString());
-            }
-#endif
+            var user = new UserChatMessage($"""
+                User context:
+                {context}
+
+
+                Task:
+                {prompt}
+                """);
+
 
             var completionOptions = new ChatCompletionOptions
             {
-                Temperature = 0.3f
+                Temperature = 0.2f
             };
 
-            ChatCompletion chatCompletion = await _chatClient.CompleteChatAsync(messages, completionOptions);
-            string responseContent = chatCompletion.Content[0].Text;
+
+            _logger.LogInformation("Requesting movie recs");
+            var completion = await _chatClient.CompleteChatAsync(new List<ChatMessage> { sys, user }, completionOptions, ct);
+            var text = completion.Value.Content[0].Text;
 
 
-            return await GetMovieIdAndPoster(responseContent);
+
+
+            var recs = TryParseRecommendations(text);
+            if (recs.Count == 0) return Array.Empty<MovieDetail>();
+
+
+            // Deduplicate & cap
+            var normalized = recs
+            .Where(r => !string.IsNullOrWhiteSpace(r.movie_name))
+            .Select(Normalize)
+            .DistinctBy(r => $"{r.movie_name.ToLowerInvariant()}|{r.release_year}")
+            .Take(_options.MaxRecommendations)
+            .ToList();
+
+
+            var results = await ResolveMovieDetails(normalized, ct);
+            return results;
         }
 
-        public async Task<string> GetMovieIdAndPoster(string gptResponse)
+        private static string BuildUserContext(List<MovieGetDto>? userMovies)
         {
-             // Parse the GPT response to extract the list of movies.
-            var movieRecommendations = JsonSerializer.Deserialize<List<MovieRecommendation>>(gptResponse);
-            if (movieRecommendations == null || movieRecommendations.Count == 0)
-            {
-                return "[]";
-            }
+            if (userMovies is null || userMovies.Count == 0) return "(no prior taste data)";
 
-            var resultList = new List<MovieDetail>();
 
-            foreach (var rec in movieRecommendations)
-            {
-                
-                // Fetch the movie ID from TMDB.
-                var movieIdResponse = await _tmdbService.GetMovieIdAsync(rec.movie_name, rec.release_year);
-                if (movieIdResponse.Id <= 0)
-                {
-                    continue;
-                }
+            // Compact: show counts + a few exemplars
+            var liked = userMovies.Where(m => m.Liked == true).Select(m => m.Title).ToList();
+            var disliked = userMovies.Where(m => m.Liked == false).Select(m => m.Title).ToList();
+            var watchlist = userMovies.Where(m => m.Liked is null).Select(m => m.Title).ToList();
 
-                // Add the movie details to the result list.
-                resultList.Add(new MovieDetail
-                {
-                    movie_id = movieIdResponse.Id,
-                    movie_name = rec.movie_name,
-                    release_year = rec.release_year,
-                    poster_path = movieIdResponse.poster_path
-                });
-        
-            }
+            var blocklist = liked.Concat(disliked).Concat(watchlist)
+                         .Select(t => t.Trim())
+                         .Where(t => !string.IsNullOrWhiteSpace(t))
+                         .Distinct(StringComparer.OrdinalIgnoreCase)
+                         .ToList();
 
-            // Return aggregated results as a JSON array.
-            return JsonSerializer.Serialize(resultList);
-
-        }
-
-        private class MovieRecommendation
-        {
-            public string movie_name { get; set; }
-            public int release_year { get; set; }
-        }
-
-        private class MovieDetail
-        {
-            public int movie_id { get; set; }
-            public string movie_name { get; set; }
-            public int release_year { get; set; }
-            public string poster_path { get; set; }
-        }
-        
-        public async Task<string> GetActorBiographySummaryAsync(string biography, string actorName)
-        {
-            if (string.IsNullOrWhiteSpace(biography) || biography == "No biography available.")
-            {
-                return biography; // Return original if empty or already minimal
-            }
+            // Keep the examples short to save tokens, but still informative
+            var likedExamples = string.Join(", ", liked.Take(5));
+            var dislikedExamples = string.Join(", ", disliked.Take(5));
+            var watchlistExamples = string.Join(", ", watchlist.Take(5));
             
+            var sb = new StringBuilder();
+            sb.AppendLine("User Taste Signals:");
+            sb.AppendLine($"• Liked (count {liked.Count}): e.g., {likedExamples}");
+            sb.AppendLine($"• Disliked (count {disliked.Count}): e.g., {dislikedExamples}");
+            sb.AppendLine($"• Watchlist (count {watchlist.Count}): e.g., {watchlistExamples}");
+            sb.AppendLine();
+            sb.AppendLine("Use liked titles as POSITIVE anchors (infer genres, tone, pacing, themes, creators).");
+            sb.AppendLine("Avoid traits found in DISLIKED titles.");
+            sb.AppendLine();
+            sb.AppendLine("Blocklist (exclude all of these and near-duplicates/remakes/sequels):");
+            sb.AppendLine(string.Join(" | ", blocklist));
+            Console.WriteLine(sb.ToString());
+            return sb.ToString();
+        }
+
+        private static MovieRecommendation Normalize(MovieRecommendation r)
+        {
+            var name = r.movie_name.Trim();
+            if (name.EndsWith(")") && name.Contains("("))
+            {
+                // remove trailing year in parentheses to avoid duplicates like "Dune (2021)"
+                var open = name.LastIndexOf('(');
+                if (open >= 0) name = name[..open].Trim();
+            }
+            return new MovieRecommendation(name, r.release_year);
+        }
+
+        private static List<MovieRecommendation> TryParseRecommendations(string json)
+        {
             try
             {
-                var messages = new List<ChatMessage>
-                {
-                    new SystemChatMessage(
-                        "You are an expert summarizer who creates concise actor biographies. " +
-                        "Your task is to create a BRIEF summary of the actor's career, major achievements, and significant life events " +
-                        "in EXACTLY 150-200 words, never more. Focus on their career highlights, most famous roles, awards, and major " +
-                        "contributions to cinema. Maintain a neutral, informative tone. Do not include your own opinions " +
-                        "or commentary. Only return the summary text without any additional formatting or explanation. " +
-                        "Count your words carefully and ensure the summary is between 150-200 words. This is absolutely critical."
-                    ),
-                    new UserChatMessage($"Summarize this biography of {actorName} in 150-200 words. Never exceed 200 words:\n\n{biography}")
-                };
-
-                var completionOptions = new ChatCompletionOptions
-                {
-                    Temperature = 0.5f,
-                    // Note: In this version of the OpenAI SDK, there doesn't appear to be a property for limiting tokens
-                };
-
-                try { _logger?.LogInformation($"Requesting summary for {actorName}'s biography"); } catch { /* Continue despite logging errors */ }
-                ChatCompletion chatCompletion = await _chatClient.CompleteChatAsync(messages, completionOptions);
-                string summary = chatCompletion.Content[0].Text;
-                
-                // Count words and validate the length
-                string[] words = summary.Split(new[] { ' ', '\t', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-                int wordCount = words.Length;
-                
-                try { _logger?.LogInformation($"Generated summary for {actorName} with {wordCount} words"); } catch { /* Continue despite logging errors */ }
-                
-                // If the summary is still too long (over 250 words), make a second attempt with stronger constraints
-                if (wordCount > 250)
-                {
-                    try { _logger?.LogWarning($"Summary too long ({wordCount} words) - truncating to approximately 200 words"); } catch { /* Continue despite logging errors */ }
-                    
-                    // A simple approach to truncate to around 200 words by taking the first 200 words
-                    // This is a fallback in case the AI doesn't follow instructions
-                    string[] truncatedWords = words.Take(200).ToArray();
-                    summary = string.Join(" ", truncatedWords);
-                    
-                    // Add a period at the end if it doesn't end with punctuation
-                    if (!summary.EndsWith(".") && !summary.EndsWith("!") && !summary.EndsWith("?"))
-                    {
-                        summary += "."; 
-                    }
-                    
-                    try { _logger?.LogInformation($"Truncated summary to {truncatedWords.Length} words"); } catch { /* Continue despite logging errors */ }
-                }
-                
-                return summary;
+                var recs = JsonSerializer.Deserialize<List<MovieRecommendation>>(json, JsonOpts);
+                if (recs is not null) return recs;
             }
-            catch (Exception ex)
+            catch { /* fall through */ }
+
+
+            // recovery: attempt to slice first JSON array
+            var start = json.IndexOf('[');
+            var end = json.LastIndexOf(']');
+            if (start >= 0 && end > start)
             {
-                try 
+                var slice = json.Substring(start, end - start + 1);
+                try
                 {
-                    _logger?.LogError(ex, $"Error generating biography summary for {actorName}");
+                    var recs = JsonSerializer.Deserialize<List<MovieRecommendation>>(slice, JsonOpts);
+                    if (recs is not null) return recs;
                 }
-                catch 
-                {
-                    // Suppress any logging errors to ensure the main functionality continues
-                }
-                
-                return biography; // Fallback to original biography on error
+                catch { }
             }
+            return new List<MovieRecommendation>();
+        }
+
+        private async Task<List<MovieDetail>> ResolveMovieDetails(IReadOnlyList<MovieRecommendation> recs, CancellationToken ct)
+        {
+            var sem = new SemaphoreSlim(_options.MaxConcurrentTmdbLookups);
+            var tasks = recs.Select(async r =>
+            {
+                var cacheKey = $"tmdb:{r.movie_name.ToLowerInvariant()}:{r.release_year}";
+                if (_cache.TryGetValue<MovieDetail>(cacheKey, out var cached)) return cached;
+
+
+                await sem.WaitAsync(ct);
+                try
+                {
+                    var response = await _tmdbService.GetMovieIdAsync(r.movie_name, r.release_year, ct);
+                    if (response.Id <= 0) return null;
+                    var detail = new MovieDetail { movie_id = response.Id, movie_name = r.movie_name, release_year = r.release_year, poster_path = response.poster_path };
+                    _cache.Set(cacheKey, detail, TimeSpan.FromHours(6));
+                    return detail;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "TMDB lookup failed for {Title} ({Year})", r.movie_name, r.release_year);
+                    return null;
+                }
+                finally { sem.Release(); }
+            });
+
+
+            var all = await Task.WhenAll(tasks);
+            return all.Where(x => x is not null).Select(x => x!).ToList();
         }
     }
 }
