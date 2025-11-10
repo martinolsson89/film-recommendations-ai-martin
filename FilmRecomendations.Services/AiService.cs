@@ -36,21 +36,24 @@ namespace FilmRecomendations.Services
         }
 
         public async Task<IReadOnlyList<MovieDetail>> GetMovieRecommendationsAsync(
-        string prompt, List<MovieGetDto>? userMovies, CancellationToken ct = default)
+        string prompt,
+        List<MovieGetDto>? userMovies,
+        bool useTasteProfile,
+         CancellationToken ct = default)
         {
-            var context = BuildUserContext(userMovies);
+            var context = BuildUserContext(userMovies, useTasteProfile);
 
 
             var sys = new SystemChatMessage($$"""
             You are a movie recommender. Output ONLY valid JSON: an array of objects:
             [ { "movie_name": string, "release_year": number }, ... ]
 
-            Rules:
-            1) Use the user's LIKED titles as positive anchors. Infer at least these traits: genres, tone, pacing, themes, era/decade, and notable creators (directors, writers, actors).
-            2) Prefer candidates that match ≥2 inferred traits from LIKED (stronger matches rank higher).
-            3) Penalize overlap with DISLIKED traits (genre/tone/pacing/themes/creators).
+             Rules:
+            1) Start from the USER TASK (prompt) as primary guidance.
+            2) If user_taste_profile is present, use LIKED titles as positive anchors (genres, tone, pacing, themes, creators).
+            3) Avoid traits strongly associated with DISLIKED titles.
             4) EXCLUDE any title present in "Blocklist" (liked/disliked/watchlist), remakes of them, or direct sequels unless the user explicitly asked for them.
-            5) Balance: ~70% similar-to-liked, ~30% novel but compatible with liked traits (diversity across decades/regions/creators).
+            5) Balance: ~70% similar-to-liked, ~30% novel but compatible with liked traits (if taste profile exists).
             6) Limit to {{_options.MaxRecommendations}} items maximum.
             7) Respond with JSON only. No markdown or commentary.
 
@@ -79,10 +82,11 @@ namespace FilmRecomendations.Services
 
 
             _logger.LogInformation("Requesting movie recs");
-            var completion = await _chatClient.CompleteChatAsync(new List<ChatMessage> { sys, user }, completionOptions, ct);
+            var completion = await _chatClient.CompleteChatAsync(
+                new List<ChatMessage> { sys, user }, completionOptions, ct);
+
+
             var text = completion.Value.Content[0].Text;
-
-
 
 
             var recs = TryParseRecommendations(text);
@@ -102,8 +106,19 @@ namespace FilmRecomendations.Services
             return results;
         }
 
-        private static string BuildUserContext(List<MovieGetDto>? userMovies)
+        private static string BuildUserContext(List<MovieGetDto>? userMovies, bool useTasteProfile)
         {
+            // If user explicitly disabled taste profile, tell the model that.
+            if (!useTasteProfile)
+            {
+                return """
+                UserTasteProfile:
+                - The user has requested to IGNORE previous likes/dislikes/watchlist for this request.
+                - Do NOT infer taste from any historical movies.
+                - Base your recommendations solely on the Task prompt below.
+                """;
+            }
+
             if (userMovies is null || userMovies.Count == 0) return "(no prior taste data)";
 
 
@@ -124,15 +139,16 @@ namespace FilmRecomendations.Services
             var watchlistExamples = string.Join(", ", watchlist.Take(5));
             
             var sb = new StringBuilder();
-            sb.AppendLine("User Taste Signals:");
+            sb.AppendLine("UserTasteProfile:");
             sb.AppendLine($"• Liked (count {liked.Count}): e.g., {likedExamples}");
             sb.AppendLine($"• Disliked (count {disliked.Count}): e.g., {dislikedExamples}");
             sb.AppendLine($"• Watchlist (count {watchlist.Count}): e.g., {watchlistExamples}");
             sb.AppendLine();
+            sb.AppendLine("Guidance:");
             sb.AppendLine("Use liked titles as POSITIVE anchors (infer genres, tone, pacing, themes, creators).");
-            sb.AppendLine("Avoid traits found in DISLIKED titles.");
+            sb.AppendLine("- Avoid traits found in DISLIKED titles unless explicitly requested by the user.");
             sb.AppendLine();
-            sb.AppendLine("Blocklist (exclude all of these and near-duplicates/remakes/sequels):");
+            sb.AppendLine("Blocklist hint (system will also filter these):");
             sb.AppendLine(string.Join(" | ", blocklist));
             Console.WriteLine(sb.ToString());
             return sb.ToString();

@@ -166,3 +166,8 @@ export interface ActorMovieCredit {
   VoteAverage: number;
   VoteCount: number;
 }
+
+export interface GetRecommendationsRequestDto {
+  prompt: string;
+  useTasteProfile: boolean;
+}

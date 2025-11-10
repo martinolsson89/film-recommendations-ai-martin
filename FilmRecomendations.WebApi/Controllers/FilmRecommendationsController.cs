@@ -34,40 +34,52 @@ public class FilmRecomendationsController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("GetFilmRecommendation")]
-    public async Task<IActionResult> GetFilmRecommendation(string prompt)
+    [HttpPost("GetFilmRecommendation")]
+    public async Task<IActionResult> GetFilmRecommendation(
+    [FromBody] GetRecommendationsRequestDto dto,
+    CancellationToken ct)
     {
-        var movies = new List<MovieGetDto>();
         try
         {
-            // Get user ID from JWT token claims
-            var userId = GetCurrentUserId();
-            if (!string.IsNullOrEmpty(userId))
-            {
-                // Verify user exists and get their movies
-                var user = await _userService.FindByIdAsync(userId);
-                if (user != null)
-                {
-                    movies = await _movieRepo.GetMoviesAsync(userId);
-                    _logger.LogInformation($"Retrieved {movies.Count} movies for user {user.Email}");
-                }
-                else
-                {
-                    _logger.LogWarning($"User with ID {userId} not found in database");
-                }
-            }
-            else
-            {
-                _logger.LogWarning("No user ID found in JWT token");
-                return Unauthorized("Invalid or missing user authentication");
-            }
-
-            if (string.IsNullOrWhiteSpace(prompt))
+            if (string.IsNullOrWhiteSpace(dto.Prompt))
             {
                 return BadRequest("Prompt is required");
             }
 
-            var recommendations = await _aiService.GetMovieRecommendationsAsync(prompt, movies);
+            // Always have this, since endpoint is [Authorize]
+            var userId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId))
+            {
+                // Should rarely happen with [Authorize], but just in case
+                if (dto.UseTasteProfile)
+                    return Unauthorized("Invalid or missing user authentication");
+
+                // If you ever want anonymous + no taste profile, you could allow it here
+                return Unauthorized("Invalid or missing user authentication");
+            }
+
+            List<MovieGetDto>? movies = null;
+
+            if (dto.UseTasteProfile)
+            {
+                // Verify user exists
+                var user = await _userService.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    _logger.LogWarning("User with ID {UserId} not found in database", userId);
+                    return Unauthorized("User not found");
+                }
+
+                movies = await _movieRepo.GetMoviesAsync(userId);
+                _logger.LogInformation("Retrieved {Count} movies for user {Email}", movies.Count, user.Email);
+            }
+
+            var recommendations = await _aiService.GetMovieRecommendationsAsync(
+                dto.Prompt,
+                movies,
+                dto.UseTasteProfile,
+                ct);
+
             return Ok(recommendations);
         }
         catch (Exception ex)
@@ -76,6 +88,7 @@ public class FilmRecomendationsController : ControllerBase
             return StatusCode(500, "An error occurred while fetching recommendations.");
         }
     }
+
 
     [HttpGet("GetMovieId")]
     public async Task<IActionResult> GetMovieId(string movieName, int releaseYear)
@@ -305,7 +318,7 @@ public class FilmRecomendationsController : ControllerBase
     {
         return User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
     }
-    
+
     private string? GetCurrentUserEmail()
     {
         return User?.FindFirst(ClaimTypes.Email)?.Value;

@@ -11,9 +11,10 @@ import type { MovieRecommendation } from "../types/movie.types";
 const HomePage: React.FC = () => {
   const { movies, loading, error, searchMovies } = useMovieSearch();
   const navigate = useNavigate();
+  const [useTasteProfile, setUseTasteProfile] = React.useState(true);
 
   const handleSearch = (query: string) => {
-    searchMovies(query);
+    searchMovies({ prompt: query, useTasteProfile });
   };
 
   const handleMovieClick = (movie: MovieRecommendation) => {
@@ -32,6 +33,35 @@ const HomePage: React.FC = () => {
           What do you want to watch?
         </h1>
         <SearchForm onSearch={handleSearch} loading={loading} />
+        {/* NEW: toggle under search bar */}
+        <div className="mt-3 flex items-start gap-3 max-w-xl w-full justify-center">
+          {/* Toggle button */}
+          <button
+            type="button"
+            role="switch"
+            aria-checked={useTasteProfile}
+            onClick={() => setUseTasteProfile((prev) => !prev)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition 
+              ${useTasteProfile ? "bg-blue-500" : "bg-gray-400"}`}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition
+                ${useTasteProfile ? "translate-x-5" : "translate-x-1"}`}
+            />
+          </button>
+
+          {/* Label + helper text */}
+          <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
+            <p className="font-medium">
+              {useTasteProfile ? "Use my taste profile" : "Ignore my taste profile"}
+            </p>
+            <p className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400">
+              {useTasteProfile
+                ? "Recommendations are tailored using your liked/disliked movies."
+                : "Recommendations are based only on your prompt, without history."}
+            </p>
+          </div>
+        </div>
         <Suggestions onSelect={handleSearch} />
         
         {/* Movie Results Section */}

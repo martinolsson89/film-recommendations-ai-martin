@@ -10,15 +10,23 @@ import type {
   ActorDetails,
   MovieGetDto,
   MovieCUDto,
-  ResponsePageDto
+  ResponsePageDto,
+  GetRecommendationsRequestDto 
 } from '../types/movie.types';
 
 export class MovieService {
-  async getFilmRecommendations(prompt: string): Promise<MovieRecommendation[]> {
-    const encodedPrompt = encodeURIComponent(prompt);
-    console.log(`Fetching film recommendations for prompt: ${encodedPrompt}`);
-    return apiService.get<MovieRecommendation[]>(`/FilmRecomendations/GetFilmRecommendation?prompt=${encodedPrompt}`, true);
+  async getFilmRecommendations(
+    request: GetRecommendationsRequestDto
+  ): Promise<MovieRecommendation[]> {
+    console.log('Fetching film recommendations', request);
+
+    return apiService.post<MovieRecommendation[], GetRecommendationsRequestDto>(
+      `/FilmRecomendations/GetFilmRecommendation`,
+      request,
+      true
+    );
   }
+  
 
   async searchMovie(movieName: string, releaseYear?: number): Promise<MovieIdResponse> {
     const yearParam = releaseYear ? `&releaseYear=${releaseYear}` : '';

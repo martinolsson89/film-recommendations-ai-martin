@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { movieService } from '../../services/movieService';
-import type { MovieRecommendation, Movie, StreamingProviderResponse } from '../../types/movie.types';
+import type { MovieRecommendation, Movie, StreamingProviderResponse, GetRecommendationsRequestDto } from '../../types/movie.types';
 
 interface MoviesState {
   movies: MovieRecommendation[];
@@ -10,6 +10,7 @@ interface MoviesState {
   movieDetailsLoading: boolean;
   error: string | null;
   searchPrompt: string;
+  //TODO: add useTasteProfile to state if needed
 }
 
 // Load initial state from sessionStorage
@@ -48,15 +49,15 @@ const initialState: MoviesState = loadInitialState();
 
 export const searchMovies = createAsyncThunk(
   'movies/searchMovies',
-  async (prompt: string, { rejectWithValue }) => {
+  async (request: GetRecommendationsRequestDto, { rejectWithValue }) => {
     try {
-      const movies = await movieService.getFilmRecommendations(prompt);
+      const movies = await movieService.getFilmRecommendations(request);
 
       if (!movies || movies.length === 0) {
         return rejectWithValue('No movies found for your search. Try a different prompt.');
       }
 
-      return { movies, prompt };
+      return { movies, prompt: request.prompt };
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : 'An error occurred while searching for movies'
