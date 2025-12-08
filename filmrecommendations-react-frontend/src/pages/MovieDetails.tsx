@@ -60,6 +60,18 @@ const MovieDetails: React.FC = () => {
     console.log('Actor clicked:', actorId);
   };
 
+  const handleWatchlist = () => {
+    if(!currentMovie) return;
+    movieService
+      .addToWatchlistMovie(currentMovie.id, currentMovie.original_title || currentMovie.Title)
+      .then(() => {
+        console.log('Movie added to watchlist');
+      })
+      .catch((err) => {
+        console.error('Failed to like movie', err);
+      });
+  };
+
   const handleLike = () => {
     if (!currentMovie) return;
     movieService
@@ -135,6 +147,7 @@ const MovieDetails: React.FC = () => {
           streamingProviders={streamingProviders}
           onActorClick={handleActorClick}
           onWatchTrailer={handleWatchTrailer}
+          onAddToWatchlist={handleWatchlist}
           onLike={handleLike}
           onDislike={handleDislike}
         />

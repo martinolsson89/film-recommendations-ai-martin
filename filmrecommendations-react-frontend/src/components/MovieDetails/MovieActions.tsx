@@ -11,12 +11,12 @@ interface MovieActionsProps {
 
 const STORAGE_KEY_PREFIX = 'movie_feedback_';
 
-type FeedbackState = 'like' | 'dislike' | null;
+type FeedbackState = 'like' | 'dislike' | 'watchlist' | null;
 
 const MovieActions: React.FC<MovieActionsProps> = ({ 
   movie,
   onWatchTrailer,
-  // onAddToWatchlist,
+  onAddToWatchlist,
   onLike,
   onDislike 
 }) => {
@@ -28,7 +28,7 @@ const MovieActions: React.FC<MovieActionsProps> = ({
   useEffect(() => {
     try {
       const saved = localStorage.getItem(storageKey);
-      if (saved === 'like' || saved === 'dislike') {
+      if (saved === 'like' || saved === 'dislike' || saved == 'watchlist') {
         setFeedback(saved);
       }
     } catch {
@@ -48,6 +48,20 @@ const MovieActions: React.FC<MovieActionsProps> = ({
   const showToast = (message: string) => {
     setToast(message);
     window.setTimeout(() => setToast(null), 1600);
+  };
+
+  const handleWatchlist = () => {
+    if(feedback == 'watchlist') {
+      setFeedback(null);
+      persist(null);
+      showToast('Removed from watchlist');
+      return;
+    }
+
+    setFeedback('watchlist');
+    persist('watchlist');
+    showToast('Added to watchlist');
+    onAddToWatchlist?.()
   };
 
   const handleLike = () => {
@@ -77,6 +91,13 @@ const MovieActions: React.FC<MovieActionsProps> = ({
     onDislike?.();
   };
 
+  const watchlistClasses = `font-semibold py-2 px-4 border rounded transition-colors flex items-center ${
+  feedback === 'watchlist'
+    ? 'bg-yellow-500 border-yellow-500 text-black'
+    : 'bg-transparent border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black hover:border-transparent'
+}`;
+
+
   const likeClasses = `font-semibold py-2 px-4 border rounded transition-colors flex items-center ${
     feedback === 'like'
       ? 'bg-green-600 border-green-600 text-white'
@@ -105,6 +126,18 @@ const MovieActions: React.FC<MovieActionsProps> = ({
           </div>
         </button>
 
+        {/* Watchlist Button */}
+        <button
+          onClick={handleWatchlist}
+          className={watchlistClasses}
+          aria-pressed={feedback == 'watchlist'}
+          title={feedback === 'watchlist' ? 'In your watchlist' : 'Add to watchlist'}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 me-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5v14l7-4 7 4V5z" />
+          </svg>
+          {feedback === 'watchlist' ? 'Watchlisted' : 'Watchlist'}
+        </button>
         {/* Like Button */}
         <button 
           onClick={handleLike}

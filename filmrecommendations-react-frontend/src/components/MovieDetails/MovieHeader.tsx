@@ -44,6 +44,7 @@ interface MovieHeaderProps {
   onWatchTrailer?: () => void;
   onLike?: () => void;
   onDislike?: () => void;
+  onAddToWatchlist?: () => void;
 }
 
 const MovieHeader: React.FC<MovieHeaderProps> = ({ 
@@ -52,7 +53,8 @@ const MovieHeader: React.FC<MovieHeaderProps> = ({
   onActorClick,
   onWatchTrailer,
   onLike,
-  onDislike 
+  onDislike,
+  onAddToWatchlist
 }) => {
   const backdropStyle = movie.backdrop_path ? {
     backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.9) 100%), url(${movieService.getFullImageUrl(movie.backdrop_path)})`,
@@ -175,6 +177,7 @@ const MovieHeader: React.FC<MovieHeaderProps> = ({
               onWatchTrailer={onWatchTrailer}
               onLike={onLike}
               onDislike={onDislike}
+              onAddToWatchlist={onAddToWatchlist}
             />
 
             <hr className="border-t border-gray-700" />
