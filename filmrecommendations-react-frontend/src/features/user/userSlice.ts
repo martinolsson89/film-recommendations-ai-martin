@@ -47,13 +47,13 @@ export const fetchUserProfile = createAsyncThunk<UserProfilePayload, void, { rej
         movieService.getProfilePicture()
       ]);
 
-      console.log('📦 Raw liked response:', liked);
-      console.log('📦 Raw disliked response:', disliked);
-      console.log('📦 Raw watchlist response:', watchlist);
-      console.log('📦 liked.pageItems:', liked.pageItems);
-      console.log('📦 disliked.pageItems:', disliked.pageItems);
-      console.log('📦 watchlist.pageItems:', watchlist.pageItems);
-      console.log('📸 profilePicture:', profilePicture);
+      // console.log('📦 Raw liked response:', liked);
+      // console.log('📦 Raw disliked response:', disliked);
+      // console.log('📦 Raw watchlist response:', watchlist);
+      // console.log('📦 liked.pageItems:', liked.pageItems);
+      // console.log('📦 disliked.pageItems:', disliked.pageItems);
+      // console.log('📦 watchlist.pageItems:', watchlist.pageItems);
+      // console.log('📸 profilePicture:', profilePicture);
 
       const payload = {
         liked: liked.pageItems ?? [],
@@ -62,7 +62,7 @@ export const fetchUserProfile = createAsyncThunk<UserProfilePayload, void, { rej
         profilePicture: profilePicture ?? null
       };
 
-      console.log('✅ Final payload:', payload);
+      // console.log('✅ Final payload:', payload);
 
       return payload;
     } catch (error) {
@@ -101,16 +101,16 @@ const userSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchUserProfile.fulfilled, (state, action) => {
-        console.log('🎯 Redux fulfilled - payload:', action.payload);
+        // console.log('🎯 Redux fulfilled - payload:', action.payload);
         state.loading = false;
         state.likedMovies = action.payload.liked;
         state.dislikedMovies = action.payload.disliked;
         state.watchlistMovies = action.payload.watchlist;
         state.profilePicture = action.payload.profilePicture;
         state.initialized = true;
-        console.log('🎯 Redux state updated - likedMovies:', state.likedMovies.length);
-        console.log('🎯 Redux state updated - dislikedMovies:', state.dislikedMovies.length);
-        console.log('🎯 Redux state updated - watchlistMovies:', state.watchlistMovies.length);
+        // console.log('🎯 Redux state updated - likedMovies:', state.likedMovies.length);
+        // console.log('🎯 Redux state updated - dislikedMovies:', state.dislikedMovies.length);
+        // console.log('🎯 Redux state updated - watchlistMovies:', state.watchlistMovies.length);
       })
       .addCase(fetchUserProfile.rejected, (state, action) => {
         state.loading = false;

@@ -71,7 +71,7 @@ public class FilmRecomendationsController : ControllerBase
                 }
 
                 movies = await _movieRepo.GetMoviesAsync(userId);
-                _logger.LogInformation("Retrieved {Count} movies for user {Email}", movies.Count, user.Email);
+                _logger.LogInformation("Retrieved {Count} movies for user {Email}", movies?.Count ?? 0, user.Email);
             }
 
             var recommendations = await _aiService.GetMovieRecommendationsAsync(

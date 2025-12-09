@@ -1,6 +1,6 @@
 // Use environment variable if available, fallback to production backend
-// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://film-recommendations-backend-cda7a6gybwabbhey.swedencentral-01.azurewebsites.net';
-const API_BASE_URL = 'https://localhost:7103';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://film-recommendations-backend-cda7a6gybwabbhey.swedencentral-01.azurewebsites.net';
+// const API_BASE_URL = 'https://localhost:7103';
 
 class ApiService {
   private baseUrl: string;
@@ -11,12 +11,12 @@ class ApiService {
 
   private getAuthHeaders(): Record<string, string> {
     const token = localStorage.getItem('authToken');
-    console.log('Auth token from localStorage:', token ? `${token.substring(0, 20)}...` : 'null');
+    // console.log('Auth token from localStorage:', token ? `${token.substring(0, 20)}...` : 'null');
     const headers = {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` })
     };
-    console.log('Auth headers:', { ...headers, Authorization: headers.Authorization ? `Bearer ${token?.substring(0, 20)}...` : 'none' });
+    // console.log('Auth headers:', { ...headers, Authorization: headers.Authorization ? `Bearer ${token?.substring(0, 20)}...` : 'none' });
     return headers;
   }
 

@@ -21,7 +21,7 @@ const HomePage: React.FC = () => {
      
     navigate(`/movies/${movie.movie_id}`);
      // Log the movie click for debugging
-    console.log("Movie clicked Homepage:", movie);
+    // console.log("Movie clicked Homepage:", movie);
   };
 
   return (

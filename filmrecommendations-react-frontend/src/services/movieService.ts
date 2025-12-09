@@ -18,7 +18,7 @@ export class MovieService {
   async getFilmRecommendations(
     request: GetRecommendationsRequestDto
   ): Promise<MovieRecommendation[]> {
-    console.log('Fetching film recommendations', request);
+    // console.log('Fetching film recommendations', request);
 
     return apiService.post<MovieRecommendation[], GetRecommendationsRequestDto>(
       `/FilmRecomendations/GetFilmRecommendation`,

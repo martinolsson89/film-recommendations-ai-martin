@@ -10,8 +10,8 @@ export const useMovieSearch = () => {
   const { movies, loading, error, searchPrompt } = useAppSelector((state) => state.movies);
 
   const handleSearchMovies = async (request: GetRecommendationsRequestDto) => {
-    console.log('Auth state - isAuthenticated:', isAuthenticated);
-    console.log('Token in localStorage:', localStorage.getItem('authToken') ? 'exists' : 'missing');
+    // console.log('Auth state - isAuthenticated:', isAuthenticated);
+    // console.log('Token in localStorage:', localStorage.getItem('authToken') ? 'exists' : 'missing');
     if (!isAuthenticated) {
       console.log('User is not authenticated. Cannot search for movies.');
       return;
