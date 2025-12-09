@@ -7,7 +7,7 @@ import { fetchUserProfile, removeUserMovie } from "../features/user/userSlice";
 const ProfilePage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
-  const { profilePicture, likedMovies, dislikedMovies, loading, error, removingIds, initialized } = useAppSelector(
+  const { profilePicture, likedMovies, dislikedMovies, watchlistMovies, loading, error, removingIds, initialized } = useAppSelector(
     (state) => state.userProfile
   );
 
@@ -123,6 +123,11 @@ const ProfilePage: React.FC = () => {
         <section className="rounded-2xl bg-white p-6 shadow-lg dark:bg-gray-800">
           <h2 className="text-2xl font-semibold">Disliked movies</h2>
           <div className="mt-4">{renderMovieList(dislikedMovies, "You haven't disliked any movies yet.")}</div>
+        </section>
+
+        <section className="rounded-2xl bg-white p-6 shadow-lg dark:bg-gray-800">
+          <h2 className="text-2xl font-semibold">Watchlist</h2>
+          <div className="mt-4">{renderMovieList(watchlistMovies, "You haven't added any movies to your watchlist yet.")}</div>
         </section>
       </main>
     </div>

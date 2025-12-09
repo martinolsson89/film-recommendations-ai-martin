@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
 import { movieService } from '../../services/movieService';
-import type { MovieRecommendation, Movie, StreamingProviderResponse } from '../../types/movie.types';
+import type { MovieRecommendation, Movie, StreamingProviderResponse, GetRecommendationsRequestDto } from '../../types/movie.types';
 
 interface MoviesState {
   movies: MovieRecommendation[];
@@ -10,6 +11,8 @@ interface MoviesState {
   movieDetailsLoading: boolean;
   error: string | null;
   searchPrompt: string;
+  //TODO: add useTasteProfile to state if needed
+  useTasteProfile: boolean;
 }
 
 // Load initial state from sessionStorage
@@ -17,6 +20,7 @@ const loadInitialState = (): MoviesState => {
   try {
     const savedMovies = sessionStorage.getItem('movieRecommendations');
     const savedPrompt = sessionStorage.getItem('lastSearchQuery');
+    const savedUseTaste = sessionStorage.getItem('useTasteProfile'); 
     
     if (savedMovies && savedPrompt) {
       return {
@@ -26,7 +30,8 @@ const loadInitialState = (): MoviesState => {
         loading: false,
         movieDetailsLoading: false,
         error: null,
-        searchPrompt: savedPrompt
+        searchPrompt: savedPrompt,
+        useTasteProfile: savedUseTaste !== null ? JSON.parse(savedUseTaste) : true
       };
     }
   } catch (error) {
@@ -40,7 +45,8 @@ const loadInitialState = (): MoviesState => {
     loading: false,
     movieDetailsLoading: false,
     error: null,
-    searchPrompt: ''
+    searchPrompt: '',
+    useTasteProfile: true
   };
 };
 
@@ -48,15 +54,15 @@ const initialState: MoviesState = loadInitialState();
 
 export const searchMovies = createAsyncThunk(
   'movies/searchMovies',
-  async (prompt: string, { rejectWithValue }) => {
+  async (request: GetRecommendationsRequestDto, { rejectWithValue }) => {
     try {
-      const movies = await movieService.getFilmRecommendations(prompt);
+      const movies = await movieService.getFilmRecommendations(request);
 
       if (!movies || movies.length === 0) {
         return rejectWithValue('No movies found for your search. Try a different prompt.');
       }
 
-      return { movies, prompt };
+      return { movies, prompt: request.prompt, useTasteProfile: request.useTasteProfile };
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : 'An error occurred while searching for movies'
@@ -115,7 +121,17 @@ const moviesSlice = createSlice({
       state.streamingProviders = null;
       state.movieDetailsLoading = false;
       state.error = null;
-    }
+    },
+    // NEW: persistable toggle setter
+    setUseTasteProfile: (state, action: PayloadAction<boolean>) => {
+      state.useTasteProfile = action.payload;
+      sessionStorage.setItem('useTasteProfile', JSON.stringify(action.payload));
+    },
+    // NEW: handy toggle action
+    toggleUseTasteProfile: (state) => {
+      state.useTasteProfile = !state.useTasteProfile;
+      sessionStorage.setItem('useTasteProfile', JSON.stringify(state.useTasteProfile));
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -131,6 +147,11 @@ const moviesSlice = createSlice({
         // Save to sessionStorage like old frontend
         sessionStorage.setItem('movieRecommendations', JSON.stringify(action.payload.movies));
         sessionStorage.setItem('lastSearchQuery', action.payload.prompt);
+
+        if (typeof action.payload.useTasteProfile === 'boolean') {
+        state.useTasteProfile = action.payload.useTasteProfile;
+        sessionStorage.setItem('useTasteProfile', JSON.stringify(action.payload.useTasteProfile));
+    }
       })
       .addCase(searchMovies.rejected, (state, action) => {
         state.loading = false;
@@ -159,5 +180,5 @@ const moviesSlice = createSlice({
   }
 });
 
-export const { clearMovies, clearError, clearCurrentMovie } = moviesSlice.actions;
+export const { clearMovies, clearError, clearCurrentMovie, setUseTasteProfile, toggleUseTasteProfile } = moviesSlice.actions;
 export default moviesSlice.reducer;

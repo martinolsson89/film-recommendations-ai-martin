@@ -10,15 +10,23 @@ import type {
   ActorDetails,
   MovieGetDto,
   MovieCUDto,
-  ResponsePageDto
+  ResponsePageDto,
+  GetRecommendationsRequestDto 
 } from '../types/movie.types';
 
 export class MovieService {
-  async getFilmRecommendations(prompt: string): Promise<MovieRecommendation[]> {
-    const encodedPrompt = encodeURIComponent(prompt);
-    console.log(`Fetching film recommendations for prompt: ${encodedPrompt}`);
-    return apiService.get<MovieRecommendation[]>(`/FilmRecomendations/GetFilmRecommendation?prompt=${encodedPrompt}`, true);
+  async getFilmRecommendations(
+    request: GetRecommendationsRequestDto
+  ): Promise<MovieRecommendation[]> {
+    // console.log('Fetching film recommendations', request);
+
+    return apiService.post<MovieRecommendation[], GetRecommendationsRequestDto>(
+      `/FilmRecomendations/GetFilmRecommendation`,
+      request,
+      true
+    );
   }
+  
 
   async searchMovie(movieName: string, releaseYear?: number): Promise<MovieIdResponse> {
     const yearParam = releaseYear ? `&releaseYear=${releaseYear}` : '';
@@ -81,6 +89,14 @@ export class MovieService {
     );
   }
 
+  async getWatchlistMovies(pageNumber: number = 0, pageSize: number = 25, filter?: string): Promise<ResponsePageDto<MovieGetDto>> {
+    const filterParam = filter ? `&filter=${encodeURIComponent(filter)}` : '';
+    return apiService.get<ResponsePageDto<MovieGetDto>>(
+      `/api/Movies/watchlist?pageNumber=${pageNumber}&pageSize=${pageSize}${filterParam}`,
+      true
+    );
+  }
+
   async addUserMovie(movie: MovieCUDto): Promise<MovieGetDto> {
     return apiService.post<MovieGetDto, MovieCUDto>('/api/Movies', movie, true);
   }
@@ -97,7 +113,7 @@ export class MovieService {
     return apiService.get<{ exists: boolean; movie?: MovieGetDto }>(`/api/Movies/exists/${tmdbId}`, true);
   }
 
-  private async upsertLiked(tmdbId: number, title: string, liked: boolean): Promise<MovieGetDto> {
+  private async upsertLiked(tmdbId: number, title: string, liked: boolean | null): Promise<MovieGetDto> {
     const existsResp = await this.getMovieExistsByTMDbId(tmdbId);
     if (existsResp.exists && existsResp.movie?.movieId) {
       // Update existing record
@@ -105,11 +121,15 @@ export class MovieService {
         movieId: existsResp.movie.movieId,
         title: title,
         tmDbId: tmdbId,
-        liked: liked
+        ...(liked !== null ? { liked } : {})
       });
     }
     // Create new record
-    return this.addUserMovie({ title: title, tmDbId: tmdbId, liked: liked });
+    return this.addUserMovie({ title: title, tmDbId: tmdbId, ...(liked !== null ? { liked } : {}) });
+  }
+
+  async addToWatchlistMovie(tmdbId: number, title: string): Promise<MovieGetDto> {
+    return this.upsertLiked(tmdbId, title, null);
   }
 
   async likeMovie(tmdbId: number, title: string): Promise<MovieGetDto> {

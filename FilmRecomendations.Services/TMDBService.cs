@@ -20,7 +20,7 @@ public class TMDBService : ITMDBService
         _configuration = configuration;
     }
 
-    public async Task<MovieIdResponse> GetMovieIdAsync(string movieName, int releaseYear)
+    public async Task<MovieIdResponse> GetMovieIdAsync(string movieName, int releaseYear, CancellationToken ct = default)
     {
         var movieResponse = new MovieIdResponse();
 

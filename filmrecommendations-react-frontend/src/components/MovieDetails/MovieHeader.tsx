@@ -2,8 +2,8 @@ import React from 'react';
 import { movieService } from '../../services/movieService';
 import type { Movie, Genre, ProductionCountry, Director, Actor, StreamingProviderResponse } from '../../types/movie.types';
 import CastSection from './CastSection';
-import MovieActions from './MovieActions';
 import StreamingProviders from './StreamingProviders';
+import MovieActionsContainer from './MovieActionsContainer';
 
 type WithValues<T> = { $values?: T[] };
 const toArray = <T,>(input: T[] | WithValues<T> | undefined): T[] =>
@@ -42,8 +42,6 @@ interface MovieHeaderProps {
   streamingProviders: StreamingProviderResponse | null;
   onActorClick?: (actorId: number) => void;
   onWatchTrailer?: () => void;
-  onLike?: () => void;
-  onDislike?: () => void;
 }
 
 const MovieHeader: React.FC<MovieHeaderProps> = ({ 
@@ -51,8 +49,7 @@ const MovieHeader: React.FC<MovieHeaderProps> = ({
   streamingProviders,
   onActorClick,
   onWatchTrailer,
-  onLike,
-  onDislike 
+  
 }) => {
   const backdropStyle = movie.backdrop_path ? {
     backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.9) 100%), url(${movieService.getFullImageUrl(movie.backdrop_path)})`,
@@ -170,11 +167,9 @@ const MovieHeader: React.FC<MovieHeaderProps> = ({
             {/* <hr className="border-t border-gray-700" /> */}
 
             {/* Movie Actions */}
-            <MovieActions
+            <MovieActionsContainer
               movie={movie}
               onWatchTrailer={onWatchTrailer}
-              onLike={onLike}
-              onDislike={onDislike}
             />
 
             <hr className="border-t border-gray-700" />
