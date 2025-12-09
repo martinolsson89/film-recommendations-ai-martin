@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Movie } from '../../types/movie.types';
 
 interface MovieActionsProps {
@@ -7,43 +7,26 @@ interface MovieActionsProps {
   onAddToWatchlist?: () => void;
   onLike?: () => void;
   onDislike?: () => void;
+  // New: hydrate UI from Redux
+  initialFeedback?: FeedbackState;
 }
-
-const STORAGE_KEY_PREFIX = 'movie_feedback_';
 
 type FeedbackState = 'like' | 'dislike' | 'watchlist' | null;
 
-const MovieActions: React.FC<MovieActionsProps> = ({ 
-  movie,
+const MovieActions: React.FC<MovieActionsProps> = ({
   onWatchTrailer,
   onAddToWatchlist,
   onLike,
-  onDislike 
+  onDislike,
+  initialFeedback
 }) => {
-  const storageKey = useMemo(() => `${STORAGE_KEY_PREFIX}${movie?.id ?? 'unknown'}`, [movie?.id]);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  // Load persisted feedback
+  // Sync local UI when Redux state changes (e.g., after refresh/hydration)
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved === 'like' || saved === 'dislike' || saved == 'watchlist') {
-        setFeedback(saved);
-      }
-    } catch {
-      // ignore storage errors
-    }
-  }, [storageKey]);
-
-  const persist = (value: FeedbackState) => {
-    try {
-      if (value) localStorage.setItem(storageKey, value);
-      else localStorage.removeItem(storageKey);
-    } catch {
-      // ignore storage errors
-    }
-  };
+    setFeedback(initialFeedback ?? null);
+  }, [initialFeedback]);
 
   const showToast = (message: string) => {
     setToast(message);
@@ -51,29 +34,23 @@ const MovieActions: React.FC<MovieActionsProps> = ({
   };
 
   const handleWatchlist = () => {
-    if(feedback == 'watchlist') {
+    if (feedback === 'watchlist') {
       setFeedback(null);
-      persist(null);
       showToast('Removed from watchlist');
       return;
     }
-
     setFeedback('watchlist');
-    persist('watchlist');
     showToast('Added to watchlist');
-    onAddToWatchlist?.()
+    onAddToWatchlist?.();
   };
 
   const handleLike = () => {
-    // Toggle behavior; mutually exclusive with dislike
     if (feedback === 'like') {
       setFeedback(null);
-      persist(null);
       showToast('Removed like');
       return;
     }
     setFeedback('like');
-    persist('like');
     showToast('Liked');
     onLike?.();
   };
@@ -81,22 +58,19 @@ const MovieActions: React.FC<MovieActionsProps> = ({
   const handleDislike = () => {
     if (feedback === 'dislike') {
       setFeedback(null);
-      persist(null);
       showToast('Removed dislike');
       return;
     }
     setFeedback('dislike');
-    persist('dislike');
     showToast('Disliked');
     onDislike?.();
   };
 
   const watchlistClasses = `font-semibold py-2 px-4 border rounded transition-colors flex items-center ${
-  feedback === 'watchlist'
-    ? 'bg-yellow-500 border-yellow-500 text-black'
-    : 'bg-transparent border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black hover:border-transparent'
-}`;
-
+    feedback === 'watchlist'
+      ? 'bg-yellow-500 border-yellow-500 text-black'
+      : 'bg-transparent border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black hover:border-transparent'
+  }`;
 
   const likeClasses = `font-semibold py-2 px-4 border rounded transition-colors flex items-center ${
     feedback === 'like'
@@ -130,7 +104,7 @@ const MovieActions: React.FC<MovieActionsProps> = ({
         <button
           onClick={handleWatchlist}
           className={watchlistClasses}
-          aria-pressed={feedback == 'watchlist'}
+          aria-pressed={feedback === 'watchlist'}
           title={feedback === 'watchlist' ? 'In your watchlist' : 'Add to watchlist'}
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 me-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

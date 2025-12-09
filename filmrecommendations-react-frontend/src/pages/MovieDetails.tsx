@@ -7,7 +7,6 @@ import {
   MovieHeader,
   TrailerModal
 } from '../components/MovieDetails';
-import { movieService } from '../services/movieService';
 import TopBar from '../components/TopBar';
 
 const MovieDetails: React.FC = () => {
@@ -60,42 +59,7 @@ const MovieDetails: React.FC = () => {
     console.log('Actor clicked:', actorId);
   };
 
-  const handleWatchlist = () => {
-    if(!currentMovie) return;
-    movieService
-      .addToWatchlistMovie(currentMovie.id, currentMovie.original_title || currentMovie.Title)
-      .then(() => {
-        console.log('Movie added to watchlist');
-      })
-      .catch((err) => {
-        console.error('Failed to like movie', err);
-      });
-  };
-
-  const handleLike = () => {
-    if (!currentMovie) return;
-    movieService
-      .likeMovie(currentMovie.id, currentMovie.original_title || currentMovie.Title)
-      .then(() => {
-        // Optional: show toast/snackbar
-        console.log('Movie liked');
-      })
-      .catch((err) => {
-        console.error('Failed to like movie', err);
-      });
-  };
-
-  const handleDislike = () => {
-    if (!currentMovie) return;
-    movieService
-      .dislikeMovie(currentMovie.id, currentMovie.original_title || currentMovie.Title)
-      .then(() => {
-        console.log('Movie disliked');
-      })
-      .catch((err) => {
-        console.error('Failed to dislike movie', err);
-      });
-  };
+  // Actions are handled by MovieActionsContainer rendered inside MovieHeader
 
   if (movieDetailsLoading) {
     return (
@@ -147,9 +111,6 @@ const MovieDetails: React.FC = () => {
           streamingProviders={streamingProviders}
           onActorClick={handleActorClick}
           onWatchTrailer={handleWatchTrailer}
-          onAddToWatchlist={handleWatchlist}
-          onLike={handleLike}
-          onDislike={handleDislike}
         />
       </div>
 
