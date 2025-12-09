@@ -7,6 +7,7 @@ interface UserProfileState {
   profilePicture: string | null;
   likedMovies: MovieGetDto[];
   dislikedMovies: MovieGetDto[];
+  watchlistMovies: MovieGetDto[];
   loading: boolean;
   error: string | null;
   initialized: boolean;
@@ -17,6 +18,7 @@ const createInitialState = (): UserProfileState => ({
   profilePicture: null,
   likedMovies: [],
   dislikedMovies: [],
+  watchlistMovies: [],
   loading: false,
   error: null,
   initialized: false,
@@ -28,6 +30,7 @@ const initialState: UserProfileState = createInitialState();
 interface UserProfilePayload {
   liked: MovieGetDto[];
   disliked: MovieGetDto[];
+  watchlist: MovieGetDto[];
   profilePicture: string | null;
 }
 
@@ -37,31 +40,35 @@ export const fetchUserProfile = createAsyncThunk<UserProfilePayload, void, { rej
     try {
       console.log('🔍 Fetching user profile...');
       
-      const [liked, disliked, profilePicture] = await Promise.all([
+      const [liked, disliked, watchlist, profilePicture] = await Promise.all([
         movieService.getLikedMovies(0, 50),
         movieService.getDislikedMovies(0, 50),
+        movieService.getWatchlistMovies(0, 50),
         movieService.getProfilePicture()
       ]);
 
       console.log('📦 Raw liked response:', liked);
       console.log('📦 Raw disliked response:', disliked);
+      console.log('📦 Raw watchlist response:', watchlist);
       console.log('📦 liked.pageItems:', liked.pageItems);
       console.log('📦 disliked.pageItems:', disliked.pageItems);
+      console.log('📦 watchlist.pageItems:', watchlist.pageItems);
+      console.log('📸 profilePicture:', profilePicture);
 
       const payload = {
         liked: liked.pageItems ?? [],
         disliked: disliked.pageItems ?? [],
+        watchlist: watchlist.pageItems ?? [],
         profilePicture: profilePicture ?? null
       };
 
       console.log('✅ Final payload:', payload);
-      console.log('✅ Liked count:', payload.liked.length);
-      console.log('✅ Disliked count:', payload.disliked.length);
 
       return payload;
     } catch (error) {
-      console.error('❌ Error fetching profile:', error);
-      return rejectWithValue(error instanceof Error ? error.message : 'Failed to load profile');
+      const message = error instanceof Error ? error.message : 'Failed to fetch user profile';
+      console.error('❌ fetchUserProfile error:', error);
+      return rejectWithValue(message);
     }
   }
 );
@@ -98,10 +105,12 @@ const userSlice = createSlice({
         state.loading = false;
         state.likedMovies = action.payload.liked;
         state.dislikedMovies = action.payload.disliked;
+        state.watchlistMovies = action.payload.watchlist;
         state.profilePicture = action.payload.profilePicture;
         state.initialized = true;
         console.log('🎯 Redux state updated - likedMovies:', state.likedMovies.length);
         console.log('🎯 Redux state updated - dislikedMovies:', state.dislikedMovies.length);
+        console.log('🎯 Redux state updated - watchlistMovies:', state.watchlistMovies.length);
       })
       .addCase(fetchUserProfile.rejected, (state, action) => {
         state.loading = false;
@@ -117,6 +126,7 @@ const userSlice = createSlice({
         const removedId = action.payload.movieId ?? action.meta.arg;
         state.likedMovies = state.likedMovies.filter((movie) => movie.movieId !== removedId);
         state.dislikedMovies = state.dislikedMovies.filter((movie) => movie.movieId !== removedId);
+        state.watchlistMovies = state.watchlistMovies.filter((movie) => movie.movieId !== removedId);
         state.error = null;
       })
       .addCase(removeUserMovie.rejected, (state, action) => {
