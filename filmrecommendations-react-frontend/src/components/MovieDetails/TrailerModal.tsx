@@ -97,6 +97,7 @@ const TrailerModal: React.FC<TrailerModalProps> = ({ isOpen, onClose, trailers, 
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               className="w-full h-full min-h-[400px]"
+              referrerPolicy="strict-origin-when-cross-origin"
             />
           ) : (
             <div className="flex items-center justify-center h-64 bg-black">
