@@ -3,9 +3,9 @@ namespace FilmRecomendations.Models.DTOs;
 
 public class MovieTrailer
 {
-    public string Id { get; set; }
-    public string Name { get; set; }
-    public string Key { get; set; }
-    public string Site { get; set; }
-    public string Type { get; set; }
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Key { get; set; } = string.Empty;
+    public string Site { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
 }

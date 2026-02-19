@@ -2,7 +2,7 @@ namespace FilmRecomendations.Models.DTOs;
 
 public class ResponsePageDto<T>
 {
-    public List<T> PageItems { get; init; }
+    public List<T> PageItems { get; init; } = new();
     public int DbItemsCount { get; init; }
 
     public int PageNr { get; init; }
