@@ -1,36 +1,41 @@
-﻿using FilmRecomendations.Models.DTOs;
+using FilmRecomendations.Models.DTOs;
 
 namespace FilmRecomendations.Services;
 
 public interface ITMDBService
 {
     /// <summary>
-    /// Fetches the movie id by searching the movie database by name and release year
+    /// Fetches the movie ID by searching TMDB by movie name and release year.
     /// </summary>
-    /// <param name="movieName">Name of the movie</param>
-    /// <param name="releaseYear">Release year of the movie</param>
-    /// <returns>Movie ID from TMDB</returns>
     Task<MovieIdResponse> GetMovieIdAsync(string movieName, int releaseYear, CancellationToken ct = default);
 
     /// <summary>
-    /// Fetches movie details by movie id
+    /// Fetches movie details by TMDB movie ID.
     /// </summary>
-    /// <param name="movieId">ID of the movie in TMDB</param>
-    /// <returns>Movie details</returns>
-    // In ITMDBService.cs
-    Task<Movie?> GetMovieDetailsAsync(int movieId);
-    /// Fetches streaming providers for a movie by movie id
-    /// </summary>
-    /// <param name="movieId">ID of the movie in TMDB</param>
-    /// <returns>Streaming provider information</returns>
-    Task<StreamingProviderResponse> GetStreamingProvidersAsync(int movieId);
-    Task<List<MovieTrailer>> GetMovieTrailersAsync(int movieId);
-    Task<List<Director>> GetMovieDirectorsAsync(int movieId);
-    Task<List<Actor>> GetMovieActorsAsync(int movieId);
+    Task<Movie?> GetMovieDetailsAsync(int movieId, CancellationToken ct = default);
+
     /// <summary>
-    /// Fetches detailed information for an actor including biography and known for movies
+    /// Fetches streaming providers by TMDB movie ID.
     /// </summary>
-    /// <param name="actorId">ID of the actor in TMDB</param>
-    /// <returns>Actor details with known for movies</returns>
-    Task<ActorDetails?> GetActorDetailsAsync(int actorId);
+    Task<StreamingProviderResponse> GetStreamingProvidersAsync(int movieId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Fetches movie trailers by TMDB movie ID.
+    /// </summary>
+    Task<List<MovieTrailer>> GetMovieTrailersAsync(int movieId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Fetches movie directors by TMDB movie ID.
+    /// </summary>
+    Task<List<Director>> GetMovieDirectorsAsync(int movieId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Fetches movie actors by TMDB movie ID.
+    /// </summary>
+    Task<List<Actor>> GetMovieActorsAsync(int movieId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Fetches detailed actor information, including known-for movies.
+    /// </summary>
+    Task<ActorDetails?> GetActorDetailsAsync(int actorId, CancellationToken ct = default);
 }

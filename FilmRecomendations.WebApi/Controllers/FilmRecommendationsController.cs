@@ -105,7 +105,7 @@ public class FilmRecomendationsController : ControllerBase
                 return BadRequest("Valid release year is required");
             }
 
-            var movieIdResponse = await _tmdbService.GetMovieIdAsync(movieName, releaseYear);
+            var movieIdResponse = await _tmdbService.GetMovieIdAsync(movieName, releaseYear, HttpContext.RequestAborted);
 
             if (movieIdResponse.Id <= 0)
             {
@@ -132,7 +132,7 @@ public class FilmRecomendationsController : ControllerBase
                 return BadRequest("Valid movie ID is required");
             }
 
-            var movieDetails = await _tmdbService.GetMovieDetailsAsync(movieId);
+            var movieDetails = await _tmdbService.GetMovieDetailsAsync(movieId, HttpContext.RequestAborted);
 
             if (movieDetails == null)
             {
@@ -158,7 +158,7 @@ public class FilmRecomendationsController : ControllerBase
                 return BadRequest("Valid movie ID is required");
             }
 
-            var trailers = await _tmdbService.GetMovieTrailersAsync(movieId);
+            var trailers = await _tmdbService.GetMovieTrailersAsync(movieId, HttpContext.RequestAborted);
 
             if (trailers.Count == 0)
             {
@@ -184,7 +184,7 @@ public class FilmRecomendationsController : ControllerBase
                 return BadRequest("Valid movie ID is required");
             }
 
-            var streamingProviders = await _tmdbService.GetStreamingProvidersAsync(movieId);
+            var streamingProviders = await _tmdbService.GetStreamingProvidersAsync(movieId, HttpContext.RequestAborted);
 
             return Ok(streamingProviders);
         }
@@ -205,7 +205,7 @@ public class FilmRecomendationsController : ControllerBase
                 return BadRequest("Valid movie ID is required");
             }
 
-            var directors = await _tmdbService.GetMovieDirectorsAsync(movieId);
+            var directors = await _tmdbService.GetMovieDirectorsAsync(movieId, HttpContext.RequestAborted);
             if (directors == null || directors.Count == 0)
             {
                 return NotFound($"No directors found for movie ID: {movieId}");
@@ -230,7 +230,7 @@ public class FilmRecomendationsController : ControllerBase
                 return BadRequest("Valid movie ID is required");
             }
 
-            var actors = await _tmdbService.GetMovieActorsAsync(movieId);
+            var actors = await _tmdbService.GetMovieActorsAsync(movieId, HttpContext.RequestAborted);
             if (actors == null || actors.Count == 0)
             {
                 return NotFound($"No actors found for movie ID: {movieId}");
@@ -255,7 +255,7 @@ public class FilmRecomendationsController : ControllerBase
                 return BadRequest("Valid actor ID is required");
             }
 
-            var actorDetails = await _tmdbService.GetActorDetailsAsync(actorId);
+            var actorDetails = await _tmdbService.GetActorDetailsAsync(actorId, HttpContext.RequestAborted);
 
             if (actorDetails == null)
             {
