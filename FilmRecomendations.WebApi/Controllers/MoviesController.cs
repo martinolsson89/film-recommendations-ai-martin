@@ -99,7 +99,19 @@ public class MoviesController : ControllerBase
     {
         try
         {
-            var movie = await _movieRepo.GetMovieAsync(movieId);
+            var userId = GetCurrentUserId();
+            if (userId == null)
+            {
+                return BadRequest("User not found");
+            }
+
+            var user = await _userService.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return BadRequest("User not found");
+            }
+
+            var movie = await _movieRepo.GetMovieAsync(movieId, userId);
 
             return Ok(movie);
         }
@@ -164,7 +176,7 @@ public class MoviesController : ControllerBase
             
             await movie.AddLoggedInUserToDtoAsync(userId, User);
 
-            var updatedMovie = await _movieRepo.UpdateMovieAsync(movie);
+            var updatedMovie = await _movieRepo.UpdateMovieAsync(movie, userId);
 
             return Ok(updatedMovie);
         }
@@ -182,7 +194,19 @@ public class MoviesController : ControllerBase
     {
         try
         {
-            var deletedMovie = await _movieRepo.DeleteMovieAsync(movieId);
+            var userId = GetCurrentUserId();
+            if (userId == null)
+            {
+                return BadRequest("User not found");
+            }
+
+            var user = await _userService.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return BadRequest("User not found");
+            }
+
+            var deletedMovie = await _movieRepo.DeleteMovieAsync(movieId, userId);
 
             return Ok(deletedMovie);
         }

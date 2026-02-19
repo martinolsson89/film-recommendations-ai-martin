@@ -70,10 +70,14 @@ public class MovieRepo : IMovieRepo
         return MapToDto(movie);
     }
 
-    public async Task<MovieGetDto> DeleteMovieAsync(Guid movieId)
+    public async Task<MovieGetDto> DeleteMovieAsync(Guid movieId, string userId)
     {
         var movieIdString = movieId.ToString();
-        var filter = Builders<MovieDbM>.Filter.Eq(m => m.MovieId, movieIdString);
+        var filterBuilder = Builders<MovieDbM>.Filter;
+        var filter = filterBuilder.And(
+            filterBuilder.Eq(m => m.MovieId, movieIdString),
+            filterBuilder.Eq(m => m.UserId, userId)
+        );
         var movie = await _context.Movies.Find(filter).FirstOrDefaultAsync();
 
         if (movie == null)
@@ -83,10 +87,14 @@ public class MovieRepo : IMovieRepo
         return MapToDto(movie);
     }
 
-    public async Task<MovieGetDto?> GetMovieAsync(Guid movieId)
+    public async Task<MovieGetDto?> GetMovieAsync(Guid movieId, string userId)
     {
         var movieIdString = movieId.ToString();
-        var filter = Builders<MovieDbM>.Filter.Eq(m => m.MovieId, movieIdString);
+        var filterBuilder = Builders<MovieDbM>.Filter;
+        var filter = filterBuilder.And(
+            filterBuilder.Eq(m => m.MovieId, movieIdString),
+            filterBuilder.Eq(m => m.UserId, userId)
+        );
         var movie = await _context.Movies.Find(filter).FirstOrDefaultAsync();
         return movie != null ? MapToDto(movie) : null;
     }
@@ -169,22 +177,28 @@ public class MovieRepo : IMovieRepo
 
         var movies = await _context.Movies.Find(mongoFilter).ToListAsync();
         return movies.Select(MapToDto).ToList();
-    }    public async Task<MovieGetDto> UpdateMovieAsync(MovieCUDtO item)
+    }
+
+    public async Task<MovieGetDto> UpdateMovieAsync(MovieCUDtO item, string userId)
     {
         if (item.MovieId == null)
             throw new ArgumentException($"{nameof(item.MovieId)} is required for updates");
 
-        if (string.IsNullOrEmpty(item.UserId))
-            throw new ArgumentException($"{nameof(item.UserId)} is required");
+        if (string.IsNullOrEmpty(userId))
+            throw new ArgumentException($"{nameof(userId)} is required");
 
         // Check if user exists
-        var userFilter = Builders<ApplicationUser>.Filter.Eq(u => u.Id, item.UserId);
+        var userFilter = Builders<ApplicationUser>.Filter.Eq(u => u.Id, userId);
         var userExists = await _context.Users.CountDocumentsAsync(userFilter) > 0;
         
         if (!userExists)
-            throw new ArgumentException($"User {item.UserId} does not exist in the database");
+            throw new ArgumentException($"User {userId} does not exist in the database");
 
-        var movieFilter = Builders<MovieDbM>.Filter.Eq(m => m.MovieId, item.MovieId.ToString());
+        var filterBuilder = Builders<MovieDbM>.Filter;
+        var movieFilter = filterBuilder.And(
+            filterBuilder.Eq(m => m.MovieId, item.MovieId.ToString()),
+            filterBuilder.Eq(m => m.UserId, userId)
+        );
         var movie = await _context.Movies.Find(movieFilter).FirstOrDefaultAsync();
 
         if (movie == null)
@@ -193,7 +207,7 @@ public class MovieRepo : IMovieRepo
         movie.Title = item.Title;
         movie.TMDbId = item.TMDbId;
         movie.Liked = item.Liked;
-        movie.UserId = item.UserId;
+        movie.UserId = userId;
         movie.UpdatedAt = DateTime.UtcNow;
 
         await _context.Movies.ReplaceOneAsync(movieFilter, movie);
