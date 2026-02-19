@@ -23,7 +23,9 @@ public class AuthController : ControllerBase
         _userService = userService;
         _configuration = configuration;
         _logger = logger;
-    }    [HttpPost("login")]
+    }    
+    
+    [HttpPost("login")]
     [EnableRateLimiting("AuthPolicy")]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequest)
     {
@@ -78,11 +80,6 @@ public class AuthController : ControllerBase
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    private string GetClientIpAddress()
-    {
-        // Do not trust client-supplied forwarded headers for identity/logging.
-        return HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "unknown";
-    }
 
     [HttpPost("register")]
     [EnableRateLimiting("AuthPolicy")]
@@ -137,5 +134,10 @@ public class AuthController : ControllerBase
         var token = GenerateJwtToken(user);
 
         return Ok(new LoginResponseDto { Token = token, UserId = user.Id });
+    }
+    private string GetClientIpAddress()
+    {
+        // Do not trust client-supplied forwarded headers for identity/logging.
+        return HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "unknown";
     }
 }

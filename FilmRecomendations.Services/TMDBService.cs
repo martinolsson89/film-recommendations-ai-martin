@@ -170,7 +170,7 @@ public class TMDBService : ITMDBService
         }
     }
 
-    public async Task<Movie> GetMovieDetailsAsync(int movieId)
+    public async Task<Movie?> GetMovieDetailsAsync(int movieId)
     {
         try
         {
@@ -202,7 +202,7 @@ public class TMDBService : ITMDBService
                         using var document = JsonDocument.Parse(content);
                         if (document.RootElement.TryGetProperty("poster_path", out var posterPathElement))
                         {
-                            movie.poster_path = posterPathElement.GetString();
+                            movie.poster_path = posterPathElement.GetString() ?? string.Empty;
                         }
                     }
 
@@ -302,8 +302,8 @@ public class TMDBService : ITMDBService
                 var newProvider = new Provider
                 {
                     ProviderId = provider.TryGetProperty("provider_id", out var idElement) ? idElement.GetInt32() : 0,
-                    ProviderName = provider.TryGetProperty("provider_name", out var nameElement) ? nameElement.GetString() : null,
-                    LogoPath = provider.TryGetProperty("logo_path", out var logoElement) ? logoElement.GetString() : null
+                    ProviderName = provider.TryGetProperty("provider_name", out var nameElement) ? nameElement.GetString() ?? string.Empty : string.Empty,
+                    LogoPath = provider.TryGetProperty("logo_path", out var logoElement) ? logoElement.GetString() ?? string.Empty : string.Empty
                 };
                 providers.Add(newProvider);
             }
@@ -350,11 +350,11 @@ public class TMDBService : ITMDBService
                     {
                         trailers.Add(new MovieTrailer
                         {
-                            Id = result.TryGetProperty("id", out var idElement) ? idElement.GetString() : string.Empty,
-                            Name = result.TryGetProperty("name", out var nameElement) ? nameElement.GetString() : string.Empty,
-                            Key = result.TryGetProperty("key", out var keyElement) ? keyElement.GetString() : string.Empty,
-                            Site = siteElement.GetString(),
-                            Type = typeElement.GetString()
+                            Id = result.TryGetProperty("id", out var idElement) ? idElement.GetString() ?? string.Empty : string.Empty,
+                            Name = result.TryGetProperty("name", out var nameElement) ? nameElement.GetString() ?? string.Empty : string.Empty,
+                            Key = result.TryGetProperty("key", out var keyElement) ? keyElement.GetString() ?? string.Empty : string.Empty,
+                            Site = siteElement.GetString() ?? string.Empty,
+                            Type = typeElement.GetString() ?? string.Empty
                         });
                     }
                 }
@@ -374,7 +374,7 @@ public class TMDBService : ITMDBService
         }
     }
 
-    public async Task<ActorDetails> GetActorDetailsAsync(int actorId)
+    public async Task<ActorDetails?> GetActorDetailsAsync(int actorId)
     {
         try
         {
@@ -415,7 +415,7 @@ public class TMDBService : ITMDBService
                 Id = person.GetProperty("id").GetInt32(),
                 Name = person.GetProperty("name").GetString(),
                 ProfilePath = person.TryGetProperty("profile_path", out var profilePath) && !profilePath.ValueKind.Equals(JsonValueKind.Null) 
-                    ? profilePath.GetString() 
+                    ? profilePath.GetString() ?? string.Empty
                     : null,
                 Biography = person.TryGetProperty("biography", out var bio) && !bio.ValueKind.Equals(JsonValueKind.Null) 
                     ? bio.GetString() 

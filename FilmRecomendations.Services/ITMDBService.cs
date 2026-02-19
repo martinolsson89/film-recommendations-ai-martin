@@ -18,7 +18,7 @@ public interface ITMDBService
     /// <param name="movieId">ID of the movie in TMDB</param>
     /// <returns>Movie details</returns>
     // In ITMDBService.cs
-    Task<Movie> GetMovieDetailsAsync(int movieId);
+    Task<Movie?> GetMovieDetailsAsync(int movieId);
     /// Fetches streaming providers for a movie by movie id
     /// </summary>
     /// <param name="movieId">ID of the movie in TMDB</param>
@@ -32,5 +32,5 @@ public interface ITMDBService
     /// </summary>
     /// <param name="actorId">ID of the actor in TMDB</param>
     /// <returns>Actor details with known for movies</returns>
-    Task<ActorDetails> GetActorDetailsAsync(int actorId);
+    Task<ActorDetails?> GetActorDetailsAsync(int actorId);
 }

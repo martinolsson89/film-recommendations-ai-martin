@@ -1,6 +1,9 @@
-// Use environment variable if available, fallback to production backend
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://film-recommendations-backend-cda7a6gybwabbhey.swedencentral-01.azurewebsites.net';
-// const API_BASE_URL = 'https://localhost:7103';
+const DEV_API_BASE_URL = 'https://localhost:7103';
+const PROD_API_BASE_URL = 'https://film-recommendations-backend-cda7a6gybwabbhey.swedencentral-01.azurewebsites.net';
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL?.trim() ||
+  (import.meta.env.DEV ? DEV_API_BASE_URL : PROD_API_BASE_URL);
 
 class ApiService {
   private baseUrl: string;
