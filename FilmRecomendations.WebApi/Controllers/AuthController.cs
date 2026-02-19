@@ -80,23 +80,11 @@ public class AuthController : ControllerBase
 
     private string GetClientIpAddress()
     {
-        // Check for forwarded IP first (in case behind proxy/load balancer)
-        var forwardedFor = Request.Headers["X-Forwarded-For"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(forwardedFor))
-        {
-            return forwardedFor.Split(',')[0].Trim();
-        }
-        
-        // Check for real IP header
-        var realIp = Request.Headers["X-Real-IP"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(realIp))
-        {
-            return realIp;
-        }
-        
-        // Fallback to connection remote IP
-        return HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-    }    [HttpPost("register")]
+        // Do not trust client-supplied forwarded headers for identity/logging.
+        return HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "unknown";
+    }
+
+    [HttpPost("register")]
     [EnableRateLimiting("AuthPolicy")]
     public async Task<IActionResult> Register([FromBody] RegisterRequestDto registerRequest)
     {

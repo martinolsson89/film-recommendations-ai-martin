@@ -158,15 +158,9 @@ builder.Services.AddRateLimiter(options =>
 // Helper function to get client identifier for rate limiting
 static string GetClientIdentifier(HttpContext context)
 {
-    // Check for forwarded IP first (in case behind proxy/load balancer)
-    var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-    if (!string.IsNullOrEmpty(forwardedFor))
-    {
-        return forwardedFor.Split(',')[0].Trim();
-    }
-
-    // Fallback to connection remote IP
-    return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+    // Do not trust forwarded headers directly. For direct internet traffic, use socket remote IP.
+    // If later deployed behind trusted proxies, configure UseForwardedHeaders with KnownProxies/KnownNetworks first.
+    return context.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "unknown";
 }
 
 builder.Services.AddAuthentication(options =>
