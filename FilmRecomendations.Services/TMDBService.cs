@@ -347,10 +347,10 @@ public class TMDBService : ITMDBService
         {
             Id = TryGetInt(person, "id") ?? 0,
             Name = TryGetString(person, "name") ?? string.Empty,
-            ProfilePath = TryGetString(person, "profile_path"),
+            ProfilePath = TryGetString(person, "profile_path") ?? string.Empty,
             Biography = TryGetString(person, "biography") ?? "No biography available.",
-            Birthday = TryGetString(person, "birthday"),
-            PlaceOfBirth = TryGetString(person, "place_of_birth"),
+            Birthday = TryGetString(person, "birthday") ?? string.Empty,
+            PlaceOfBirth = TryGetString(person, "place_of_birth") ?? string.Empty,
             KnownForMovies = new List<ActorMovieCredit>()
         };
 
@@ -374,8 +374,8 @@ public class TMDBService : ITMDBService
                 Id = TryGetInt(movie, "id") ?? 0,
                 Title = title,
                 Character = TryGetString(movie, "character") ?? "Unknown",
-                PosterPath = string.IsNullOrWhiteSpace(posterPath) ? null : $"{TmdbImageW200BaseUrl}{posterPath}",
-                ReleaseDate = TryGetString(movie, "release_date"),
+                PosterPath = string.IsNullOrWhiteSpace(posterPath) ? string.Empty : $"{TmdbImageW200BaseUrl}{posterPath}",
+                ReleaseDate = TryGetString(movie, "release_date") ?? string.Empty,
                 Popularity = TryGetDouble(movie, "popularity") ?? 0,
                 VoteAverage = TryGetDouble(movie, "vote_average") ?? 0,
                 VoteCount = TryGetInt(movie, "vote_count") ?? 0
