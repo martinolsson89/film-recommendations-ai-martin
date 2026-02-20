@@ -3,6 +3,7 @@ import TopBar from "../components/TopBar";
 import { useAppSelector } from "../hooks/useAppSelector";
 import { useAppDispatch } from "../hooks/useAppDispatch";
 import { fetchUserProfile, removeUserMovie } from "../features/user/userSlice";
+import { useNavigate } from "react-router-dom";
 
 const ProfilePage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -10,6 +11,7 @@ const ProfilePage: React.FC = () => {
   const { profilePicture, likedMovies, dislikedMovies, watchlistMovies, loading, error, removingIds, initialized } = useAppSelector(
     (state) => state.userProfile
   );
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isAuthenticated && !initialized) {
@@ -22,6 +24,13 @@ const ProfilePage: React.FC = () => {
       return;
     }
     void dispatch(removeUserMovie(movieId));
+  };
+  
+  const handleDetails = (tmDbId?: number) => {
+    if (!tmDbId) {
+      return;
+    }
+    navigate(`/movies/${tmDbId}`);
   };
 
   const renderMovieList = (movies: typeof likedMovies, emptyMessage: string) => {
@@ -50,14 +59,23 @@ const ProfilePage: React.FC = () => {
                   <p className="text-sm text-gray-500 dark:text-gray-400">TMDb ID: {movie.tmDbId}</p>
                 ) : null}
               </div>
-              <button
-                type="button"
-                onClick={() => handleRemove(movie.movieId)}
-                disabled={!movie.movieId || isRemoving}
-                className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300"
-              >
-                {isRemoving ? "Removing..." : movie.movieId ? "Remove" : "Not removable"}
-              </button>
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => handleDetails(movie.tmDbId)}
+                  className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 mx-2"
+                >
+                  Details
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRemove(movie.movieId)}
+                  disabled={!movie.movieId || isRemoving}
+                  className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300 mx-2"
+                >
+                  {isRemoving ? "Removing..." : movie.movieId ? "Remove" : "Not removable"}
+                </button>
+              </div>
             </li>
           );
         })}
