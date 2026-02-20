@@ -11,17 +11,27 @@ interface MoviesState {
   movieDetailsLoading: boolean;
   error: string | null;
   searchPrompt: string;
-  //TODO: add useTasteProfile to state if needed
   useTasteProfile: boolean;
+  useWebSearch: boolean;
 }
 
 // Load initial state from sessionStorage
 const loadInitialState = (): MoviesState => {
+  const safeParseBool = (value: string | null, fallback: boolean): boolean => {
+    if (value === null) return fallback;
+    try {
+      return JSON.parse(value) as boolean;
+    } catch {
+      return fallback;
+    }
+  };
+
+  const savedMovies = sessionStorage.getItem('movieRecommendations');
+  const savedPrompt = sessionStorage.getItem('lastSearchQuery');
+  const savedUseTaste = sessionStorage.getItem('useTasteProfile');
+  const savedUseWebSearch = sessionStorage.getItem('useWebSearch');
+
   try {
-    const savedMovies = sessionStorage.getItem('movieRecommendations');
-    const savedPrompt = sessionStorage.getItem('lastSearchQuery');
-    const savedUseTaste = sessionStorage.getItem('useTasteProfile'); 
-    
     if (savedMovies && savedPrompt) {
       return {
         movies: JSON.parse(savedMovies),
@@ -31,7 +41,8 @@ const loadInitialState = (): MoviesState => {
         movieDetailsLoading: false,
         error: null,
         searchPrompt: savedPrompt,
-        useTasteProfile: savedUseTaste !== null ? JSON.parse(savedUseTaste) : true
+        useTasteProfile: safeParseBool(savedUseTaste, true),
+        useWebSearch: safeParseBool(savedUseWebSearch, false)
       };
     }
   } catch (error) {
@@ -46,7 +57,8 @@ const loadInitialState = (): MoviesState => {
     movieDetailsLoading: false,
     error: null,
     searchPrompt: '',
-    useTasteProfile: true
+    useTasteProfile: safeParseBool(savedUseTaste, true),
+    useWebSearch: safeParseBool(savedUseWebSearch, false)
   };
 };
 
@@ -62,7 +74,12 @@ export const searchMovies = createAsyncThunk(
         return rejectWithValue('No movies found for your search. Try a different prompt.');
       }
 
-      return { movies, prompt: request.prompt, useTasteProfile: request.useTasteProfile };
+      return {
+        movies,
+        prompt: request.prompt,
+        useTasteProfile: request.useTasteProfile,
+        useWebSearch: request.useWebSearch ?? false
+      };
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : 'An error occurred while searching for movies'
@@ -132,6 +149,14 @@ const moviesSlice = createSlice({
       state.useTasteProfile = !state.useTasteProfile;
       sessionStorage.setItem('useTasteProfile', JSON.stringify(state.useTasteProfile));
     },
+    setUseWebSearch: (state, action: PayloadAction<boolean>) => {
+      state.useWebSearch = action.payload;
+      sessionStorage.setItem('useWebSearch', JSON.stringify(action.payload));
+    },
+    toggleUseWebSearch: (state) => {
+      state.useWebSearch = !state.useWebSearch;
+      sessionStorage.setItem('useWebSearch', JSON.stringify(state.useWebSearch));
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -149,9 +174,14 @@ const moviesSlice = createSlice({
         sessionStorage.setItem('lastSearchQuery', action.payload.prompt);
 
         if (typeof action.payload.useTasteProfile === 'boolean') {
-        state.useTasteProfile = action.payload.useTasteProfile;
-        sessionStorage.setItem('useTasteProfile', JSON.stringify(action.payload.useTasteProfile));
-    }
+          state.useTasteProfile = action.payload.useTasteProfile;
+          sessionStorage.setItem('useTasteProfile', JSON.stringify(action.payload.useTasteProfile));
+        }
+
+        if (typeof action.payload.useWebSearch === 'boolean') {
+          state.useWebSearch = action.payload.useWebSearch;
+          sessionStorage.setItem('useWebSearch', JSON.stringify(action.payload.useWebSearch));
+        }
       })
       .addCase(searchMovies.rejected, (state, action) => {
         state.loading = false;
@@ -180,5 +210,13 @@ const moviesSlice = createSlice({
   }
 });
 
-export const { clearMovies, clearError, clearCurrentMovie, setUseTasteProfile, toggleUseTasteProfile } = moviesSlice.actions;
+export const {
+  clearMovies,
+  clearError,
+  clearCurrentMovie,
+  setUseTasteProfile,
+  toggleUseTasteProfile,
+  setUseWebSearch,
+  toggleUseWebSearch
+} = moviesSlice.actions;
 export default moviesSlice.reducer;

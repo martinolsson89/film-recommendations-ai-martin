@@ -170,4 +170,5 @@ export interface ActorMovieCredit {
 export interface GetRecommendationsRequestDto {
   prompt: string;
   useTasteProfile: boolean;
+  useWebSearch?: boolean;
 }

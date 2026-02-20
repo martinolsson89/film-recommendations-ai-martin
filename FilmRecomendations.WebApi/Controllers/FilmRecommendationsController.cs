@@ -13,6 +13,7 @@ namespace FilmRecomendations.WebApi.Controllers;
 [Route("[controller]")]
 public class FilmRecomendationsController : ControllerBase
 {
+    private const string WebSearchTesterEmail = "martinolsson89@gmail.com";
     private readonly ILogger<FilmRecomendationsController> _logger;
     private readonly IAiService _aiService;
     private readonly ITMDBService _tmdbService;
@@ -74,10 +75,24 @@ public class FilmRecomendationsController : ControllerBase
                 _logger.LogInformation("Retrieved {Count} movies for user {Email}", movies?.Count ?? 0, user.Email);
             }
 
+            var requestedWebSearch = dto.UseWebSearch ?? false;
+            var currentUserEmail = GetCurrentUserEmail();
+            var isAllowedWebSearchTester = !string.IsNullOrWhiteSpace(currentUserEmail) &&
+                                           string.Equals(currentUserEmail, WebSearchTesterEmail, StringComparison.OrdinalIgnoreCase);
+            var effectiveUseWebSearch = requestedWebSearch && isAllowedWebSearchTester;
+
+            if (requestedWebSearch && !effectiveUseWebSearch)
+            {
+                _logger.LogWarning(
+                    "Blocked web search recommendation request for unauthorized user {Email}",
+                    string.IsNullOrWhiteSpace(currentUserEmail) ? "<missing-email-claim>" : currentUserEmail);
+            }
+
             var recommendations = await _aiService.GetMovieRecommendationsAsync(
                 dto.Prompt,
                 movies,
                 dto.UseTasteProfile,
+                effectiveUseWebSearch,
                 ct);
 
             return Ok(recommendations);

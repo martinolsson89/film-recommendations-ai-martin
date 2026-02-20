@@ -29,6 +29,13 @@ builder.Services.Configure<AiOptions>(builder.Configuration.GetSection("AI"));
 // 2) Caching
 builder.Services.AddMemoryCache();
 
+builder.Services.AddHttpClient("XAiResponses", (sp, client) =>
+{
+    var opts = sp.GetRequiredService<IOptions<AiOptions>>().Value;
+    var endpoint = opts.Endpoint.ToString().TrimEnd('/') + "/";
+    client.BaseAddress = new Uri(endpoint);
+});
+
 
 // 3) ChatClient singleton
 builder.Services.AddSingleton<ChatClient>(sp =>

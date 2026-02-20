@@ -4,7 +4,12 @@ namespace FilmRecomendations.Services;
 
 public interface IAiService
 {
-    Task<IReadOnlyList<MovieDetail>> GetMovieRecommendationsAsync(string prompt, List<MovieGetDto>? userMovies, bool useTasteProfile, CancellationToken ct = default);
+    Task<IReadOnlyList<MovieDetail>> GetMovieRecommendationsAsync(
+        string prompt,
+        List<MovieGetDto>? userMovies,
+        bool useTasteProfile,
+        bool useWebSearch = false,
+        CancellationToken ct = default);
     
     /// <summary>
     /// Generates a concise summary of an actor's biography (around 200 words)
