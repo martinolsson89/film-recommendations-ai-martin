@@ -1,6 +1,7 @@
 ﻿using FilmRecomendations.Db.DbModels;
 using FilmRecomendations.Db.Services;
 using FilmRecomendations.Models.DTOs;
+using FilmRecomendations.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
@@ -17,24 +18,26 @@ public class AuthController : ControllerBase
     private readonly IUserService _userService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthController> _logger;
+    private readonly ITokenService _tokenService;
 
-    public AuthController(IUserService userService, IConfiguration configuration, ILogger<AuthController> logger)
+    public AuthController(IUserService userService, IConfiguration configuration, ILogger<AuthController> logger, ITokenService tokenService)
     {
         _userService = userService;
         _configuration = configuration;
         _logger = logger;
-    }    
-    
+        _tokenService = tokenService;
+    }
+
     [HttpPost("login")]
     [EnableRateLimiting("AuthPolicy")]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequest)
     {
         var clientIp = GetClientIpAddress();
-        
+
         var user = await _userService.FindByEmailAsync(loginRequest.Email);
         if (user == null)
         {
-            _logger.LogWarning("Login attempt with invalid email: {Email} from IP: {ClientIp}", 
+            _logger.LogWarning("Login attempt with invalid email: {Email} from IP: {ClientIp}",
                 loginRequest.Email, clientIp);
             return Unauthorized("Invalid Username or Password");
         }
@@ -42,44 +45,23 @@ public class AuthController : ControllerBase
         var passwordValid = await _userService.CheckPasswordAsync(user, loginRequest.Password);
         if (!passwordValid)
         {
-            _logger.LogWarning("Failed login attempt for user: {Email} from IP: {ClientIp}", 
+            _logger.LogWarning("Failed login attempt for user: {Email} from IP: {ClientIp}",
                 loginRequest.Email, clientIp);
             return Unauthorized("Invalid Username or Password");
         }
 
-        _logger.LogInformation("Successful login for user: {Email} from IP: {ClientIp}", 
+        _logger.LogInformation("Successful login for user: {Email} from IP: {ClientIp}",
             loginRequest.Email, clientIp);
-        
-        var token = GenerateJwtToken(user);
-        return Ok(new LoginResponseDto { Token = token, UserId = user.Id });
-    }private string GenerateJwtToken(ApplicationUser user)
-    {
-        var claims = new[]
-        {
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(JwtRegisteredClaimNames.GivenName, user.UserName),
-            new Claim(ClaimTypes.Name, user.UserName),
-            new Claim(ClaimTypes.NameIdentifier, user.Id)
-        };
 
-        var jwtKey = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is not configured");
-        var key = new SymmetricSecurityKey(Convert.FromBase64String(jwtKey))
-        {
-            KeyId = "myKeyId"
-        };
+        var (token, expiresAt) = _tokenService.CreateAccessToken(user);
+        var refreshToken = _tokenService.CreateRefreshToken();
 
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"],
-            audience: _configuration["Jwt:Audience"],
-            claims: claims,
-            expires: DateTime.Now.AddMinutes(30),
-            signingCredentials: creds);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return Ok(new LoginResponseDto(
+            token,
+            expiresAt,
+            user.UserName
+        ));
     }
-
 
     [HttpPost("register")]
     [EnableRateLimiting("AuthPolicy")]
@@ -130,10 +112,10 @@ public class AuthController : ControllerBase
         _logger.LogInformation("Successful registration for user: {Email} from IP: {ClientIp}", 
             registerRequest.Email, clientIp);
 
-        // Generate JWT token for the newly registered user
-        var token = GenerateJwtToken(user);
-
-        return Ok(new LoginResponseDto { Token = token, UserId = user.Id });
+        return Ok(new
+            {
+                message = "User registered successfully"
+            });
     }
     private string GetClientIpAddress()
     {

@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace FilmRecomendations.Models.DTOs;
 
-public class LoginResponseDto
-{
-    public string? Token { get; set; }
-    public string? UserId { get; set; }
-}
+public sealed record LoginResponseDto
+(
+    string AccessToken,
+    DateTime ExpiresAtUtc,
+    string UserName
+);
