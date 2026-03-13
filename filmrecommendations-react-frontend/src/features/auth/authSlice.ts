@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import { authService } from '../../services/authService';
-import type { LoginRequest, RegisterRequest, AuthResponse, RegisterResponse, User } from '../../types/auth.types';
+import type { LoginRequest, RegisterRequest, AuthResponse, User } from '../../types/auth.types';
 import { getUserFromToken } from '../../utils/jwt';
 import { authSession } from '../../services/authSession';
 
@@ -140,7 +140,7 @@ const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(registerUser.fulfilled, (state, _action: PayloadAction<RegisterResponse>) => {
+      .addCase(registerUser.fulfilled, (state) => {
         state.loading = false;
         state.error = null;
         state.initialized = true;

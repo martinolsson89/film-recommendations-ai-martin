@@ -40,11 +40,11 @@ public class UserService : IUserService
             // Normalize email and username
             user.NormalizedEmail = user.Email.ToUpperInvariant();
             user.NormalizedUserName = user.UserName.ToUpperInvariant();
-              // Hash password using ASP.NET Core Identity PasswordHasher
+            // Hash password using ASP.NET Core Identity PasswordHasher
             user.PasswordHash = _passwordHasher.HashPassword(user, password);
             user.SecurityStamp = Guid.NewGuid().ToString();
             user.ConcurrencyStamp = Guid.NewGuid().ToString();
-            
+
             user.CreatedAt = DateTime.UtcNow;
             user.UpdatedAt = DateTime.UtcNow;
 
@@ -55,7 +55,9 @@ public class UserService : IUserService
         {
             return false;
         }
-    }    public Task<bool> CheckPasswordAsync(ApplicationUser user, string password)
+    }   
+     
+    public Task<bool> CheckPasswordAsync(ApplicationUser user, string password)
     {
         if (user.PasswordHash == null) return Task.FromResult(false);
         
