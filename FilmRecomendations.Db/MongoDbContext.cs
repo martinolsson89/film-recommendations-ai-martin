@@ -20,6 +20,9 @@ public class MongoDbContext
     public IMongoCollection<MovieDbM> Movies => 
         _database.GetCollection<MovieDbM>("Movies");
 
+    public IMongoCollection<RefreshTokenDbM> RefreshTokens =>
+        _database.GetCollection<RefreshTokenDbM>("RefreshTokens");
+
     // Convenience helper for custom collections
     public IMongoCollection<T> GetCollection<T>(string name) =>
         _database.GetCollection<T>(name);

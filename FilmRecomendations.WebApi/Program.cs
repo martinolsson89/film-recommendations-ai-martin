@@ -117,6 +117,8 @@ builder.Services.AddSingleton(sp =>
 builder.Services.AddScoped<MongoDbContext>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IMongoIndexService, MongoIndexService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 
 // Register ASP.NET Core Identity PasswordHasher for secure password hashing
 builder.Services.AddScoped<IPasswordHasher<ApplicationUser>, PasswordHasher<ApplicationUser>>();

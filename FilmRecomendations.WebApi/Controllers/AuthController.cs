@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Runtime.InteropServices;
 using System.Security.Claims;
 
 namespace FilmRecomendations.WebApi.Controllers;
@@ -16,16 +17,16 @@ namespace FilmRecomendations.WebApi.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IUserService _userService;
-    private readonly IConfiguration _configuration;
     private readonly ILogger<AuthController> _logger;
     private readonly ITokenService _tokenService;
+    private readonly IRefreshTokenService _refreshTokenService;
 
-    public AuthController(IUserService userService, IConfiguration configuration, ILogger<AuthController> logger, ITokenService tokenService)
+    public AuthController(IUserService userService, ILogger<AuthController> logger, ITokenService tokenService, IRefreshTokenService refreshTokenService)
     {
         _userService = userService;
-        _configuration = configuration;
         _logger = logger;
         _tokenService = tokenService;
+        _refreshTokenService = refreshTokenService;
     }
 
     [HttpPost("login")]
@@ -56,6 +57,16 @@ public class AuthController : ControllerBase
         var (token, expiresAt) = _tokenService.CreateAccessToken(user);
         var refreshToken = _tokenService.CreateRefreshToken();
 
+        await _refreshTokenService.SaveAsync(user.Id, refreshToken);
+
+        Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTimeOffset.UtcNow.AddDays(7)
+        });
+
         return Ok(new LoginResponseDto(
             token,
             expiresAt,
@@ -68,7 +79,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Register([FromBody] RegisterRequestDto registerRequest)
     {
         var clientIp = GetClientIpAddress();
-        
+
         // Validate input
         if (string.IsNullOrWhiteSpace(registerRequest.UserName) || string.IsNullOrWhiteSpace(registerRequest.Email))
         {
@@ -80,7 +91,7 @@ public class AuthController : ControllerBase
         var existingUserByName = await _userService.FindByUserNameAsync(registerRequest.UserName);
         if (existingUserByName != null)
         {
-            _logger.LogWarning("Registration attempt with existing username: {UserName} from IP: {ClientIp}", 
+            _logger.LogWarning("Registration attempt with existing username: {UserName} from IP: {ClientIp}",
                 registerRequest.UserName, clientIp);
             return BadRequest(new { Errors = new[] { "Username already exists" } });
         }
@@ -89,7 +100,7 @@ public class AuthController : ControllerBase
         var existingUserByEmail = await _userService.FindByEmailAsync(registerRequest.Email);
         if (existingUserByEmail != null)
         {
-            _logger.LogWarning("Registration attempt with existing email: {Email} from IP: {ClientIp}", 
+            _logger.LogWarning("Registration attempt with existing email: {Email} from IP: {ClientIp}",
                 registerRequest.Email, clientIp);
             return BadRequest(new { Errors = new[] { "Email already exists" } });
         }
@@ -104,18 +115,44 @@ public class AuthController : ControllerBase
 
         if (!result)
         {
-            _logger.LogError("Failed to create user: {Email} from IP: {ClientIp}", 
+            _logger.LogError("Failed to create user: {Email} from IP: {ClientIp}",
                 registerRequest.Email, clientIp);
             return BadRequest(new { Errors = new[] { "Failed to create user" } });
         }
 
-        _logger.LogInformation("Successful registration for user: {Email} from IP: {ClientIp}", 
+        _logger.LogInformation("Successful registration for user: {Email} from IP: {ClientIp}",
             registerRequest.Email, clientIp);
 
         return Ok(new
-            {
-                message = "User registered successfully"
-            });
+        {
+            message = "User registered successfully"
+        });
+    }
+    
+    [HttpPost("refresh")]
+    public async Task<ActionResult<LoginResponseDto>> Refresh()
+    {
+        var refreshToken = Request.Cookies["refreshToken"];
+        if (string.IsNullOrWhiteSpace(refreshToken))
+            return Unauthorized();
+
+        var result = await _refreshTokenService.ValidateAndRotateAsync(refreshToken);
+        if (!result.Success)
+            return Unauthorized();
+
+        Response.Cookies.Append("refreshToken", result.NewRefreshToken, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTimeOffset.UtcNow.AddDays(7)
+        });
+
+        return Ok(new LoginResponseDto(
+            result.AccessToken,
+            result.AccessTokenExpiresAtUtc,
+            result.UserName
+        ));
     }
     private string GetClientIpAddress()
     {

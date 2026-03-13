@@ -21,6 +21,7 @@ public class MongoIndexService : IMongoIndexService
     {
         await CreateUserIndexesAsync();
         await CreateMovieIndexesAsync();
+        await CreateRefreshTokenIndexesAsync();
     }
 
     private async Task CreateUserIndexesAsync()
@@ -105,5 +106,26 @@ public class MongoIndexService : IMongoIndexService
             });
 
         await _context.Movies.Indexes.CreateOneAsync(userTmdbUniqueModel);
+    }
+
+    private async Task CreateRefreshTokenIndexesAsync()
+    {
+        var tokenHashIndexKeysDefinition = Builders<RefreshTokenDbM>.IndexKeys
+            .Ascending(x => x.TokenHash);
+
+        var tokenHashIndexModel = new CreateIndexModel<RefreshTokenDbM>(
+            tokenHashIndexKeysDefinition,
+            new CreateIndexOptions { Unique = true, Name = "UX_RefreshTokens_TokenHash" });
+
+        await _context.RefreshTokens.Indexes.CreateOneAsync(tokenHashIndexModel);
+
+        var userIdIndexKeysDefinition = Builders<RefreshTokenDbM>.IndexKeys
+            .Ascending(x => x.UserId);
+
+        var userIdIndexModel = new CreateIndexModel<RefreshTokenDbM>(
+            userIdIndexKeysDefinition,
+            new CreateIndexOptions { Name = "IX_RefreshTokens_UserId" });
+
+        await _context.RefreshTokens.Indexes.CreateOneAsync(userIdIndexModel);
     }
 }
