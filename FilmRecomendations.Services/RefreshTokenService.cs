@@ -96,6 +96,21 @@ public class RefreshTokenService : IRefreshTokenService
         };
     }
 
+    public async Task<bool> RevokeAsync(string refreshToken)
+    {
+        var now = DateTime.UtcNow;
+        var tokenHash = HashToken(refreshToken);
+
+        var filter = Builders<RefreshTokenDbM>.Filter.And(
+            Builders<RefreshTokenDbM>.Filter.Eq(x => x.TokenHash, tokenHash),
+            Builders<RefreshTokenDbM>.Filter.Eq(x => x.RevokedAtUtc, null));
+
+        var update = Builders<RefreshTokenDbM>.Update.Set(x => x.RevokedAtUtc, now);
+
+        var result = await _context.RefreshTokens.UpdateOneAsync(filter, update);
+        return result.ModifiedCount > 0;
+    }
+
     private static string HashToken(string refreshToken)
     {
         var tokenBytes = Encoding.UTF8.GetBytes(refreshToken);

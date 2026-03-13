@@ -154,6 +154,27 @@ public class AuthController : ControllerBase
             result.UserName
         ));
     }
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        var refreshToken = Request.Cookies["refreshToken"];
+
+        if (!string.IsNullOrWhiteSpace(refreshToken))
+        {
+            await _refreshTokenService.RevokeAsync(refreshToken);
+        }
+
+        Response.Cookies.Delete("refreshToken", new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict
+        });
+
+        return NoContent();
+    }
+
     private string GetClientIpAddress()
     {
         // Do not trust client-supplied forwarded headers for identity/logging.

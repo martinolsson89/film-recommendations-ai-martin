@@ -7,4 +7,5 @@ public interface IRefreshTokenService
 {
     Task SaveAsync(string userId, string refreshToken);
     Task<RefreshTokenResult> ValidateAndRotateAsync(string refreshToken);
+    Task<bool> RevokeAsync(string refreshToken);
 }
