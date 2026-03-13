@@ -59,13 +59,7 @@ public class AuthController : ControllerBase
 
         await _refreshTokenService.SaveAsync(user.Id, refreshToken);
 
-        Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTimeOffset.UtcNow.AddDays(7)
-        });
+        Response.Cookies.Append("refreshToken", refreshToken, CreateRefreshCookieOptions(DateTimeOffset.UtcNow.AddDays(7)));
 
         return Ok(new LoginResponseDto(
             token,
@@ -140,13 +134,7 @@ public class AuthController : ControllerBase
         if (!result.Success)
             return Unauthorized();
 
-        Response.Cookies.Append("refreshToken", result.NewRefreshToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTimeOffset.UtcNow.AddDays(7)
-        });
+        Response.Cookies.Append("refreshToken", result.NewRefreshToken, CreateRefreshCookieOptions(DateTimeOffset.UtcNow.AddDays(7)));
 
         return Ok(new LoginResponseDto(
             result.AccessToken,
@@ -165,15 +153,20 @@ public class AuthController : ControllerBase
             await _refreshTokenService.RevokeAsync(refreshToken);
         }
 
-        Response.Cookies.Delete("refreshToken", new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict
-        });
+        Response.Cookies.Delete("refreshToken", CreateRefreshCookieOptions());
 
         return NoContent();
     }
+
+    private static CookieOptions CreateRefreshCookieOptions(DateTimeOffset? expires = null) =>
+        new()
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.None,
+            Path = "/",
+            Expires = expires
+        };
 
     private string GetClientIpAddress()
     {

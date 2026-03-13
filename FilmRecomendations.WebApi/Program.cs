@@ -209,7 +209,8 @@ builder.Services.AddCors(options =>
             "http://localhost:5173",
             "https://mango-pebble-07db6db03.3.azurestaticapps.net")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 

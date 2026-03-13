@@ -20,7 +20,9 @@ const TopBar: React.FC = () => {
 
   const handleLogin = () => setShowLoginModal(true);
   const handleRegister = () => setShowRegisterModal(true);
-  const handleLogout = () => dispatch(logoutUser());
+  const handleLogout = () => {
+    void dispatch(logoutUser());
+  };
 
   const switchToRegister = () => {
     setShowLoginModal(false);

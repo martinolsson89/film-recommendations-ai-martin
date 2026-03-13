@@ -1,35 +1,33 @@
 import { apiService } from './api';
-import type { LoginRequest, RegisterRequest, AuthResponse } from '../types/auth.types';
+import type { LoginRequest, RegisterRequest, AuthResponse, RegisterResponse } from '../types/auth.types';
 
 export class AuthService {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    return apiService.post<AuthResponse, LoginRequest>('/api/Auth/login', credentials);
+    return apiService.post<AuthResponse, LoginRequest>('/api/Auth/login', credentials, {
+      includeCredentials: true,
+      retryOn401: false
+    });
   }
 
-  async register(userData: RegisterRequest): Promise<AuthResponse> {
-    return apiService.post<AuthResponse, RegisterRequest>('/api/Auth/register', userData);
+  async register(userData: RegisterRequest): Promise<RegisterResponse> {
+    return apiService.post<RegisterResponse, RegisterRequest>('/api/Auth/register', userData, {
+      includeCredentials: true,
+      retryOn401: false
+    });
   }
 
-  async validateToken(token: string): Promise<boolean> {
-    // Simple token presence check - backend handles validation
-    return !!token;
+  async refresh(): Promise<AuthResponse> {
+    return apiService.post<AuthResponse, undefined>('/api/Auth/refresh', undefined, {
+      includeCredentials: true,
+      retryOn401: false
+    });
   }
 
-  getToken(): string | null {
-    return localStorage.getItem('authToken');
-  }
-
-  setToken(token: string): void {
-    localStorage.setItem('authToken', token);
-  }
-
-  removeToken(): void {
-    localStorage.removeItem('authToken');
-  }
-
-  isAuthenticated(): boolean {
-    const token = this.getToken();
-    return !!token;
+  async logout(): Promise<void> {
+    await apiService.post<void, undefined>('/api/Auth/logout', undefined, {
+      includeCredentials: true,
+      retryOn401: false
+    });
   }
 }
 

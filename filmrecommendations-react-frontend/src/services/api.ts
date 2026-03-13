@@ -1,3 +1,5 @@
+import { authSession } from "./authSession";
+
 const DEV_API_BASE_URL = 'https://localhost:7103';
 const PROD_API_BASE_URL = 'https://film-recommendations-backend-cda7a6gybwabbhey.swedencentral-01.azurewebsites.net';
 
@@ -12,14 +14,18 @@ class ApiService {
     this.baseUrl = baseUrl;
   }
 
-  private getAuthHeaders(): Record<string, string> {
-    const token = localStorage.getItem('authToken');
-    // console.log('Auth token from localStorage:', token ? `${token.substring(0, 20)}...` : 'null');
-    const headers = {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` })
-    };
-    // console.log('Auth headers:', { ...headers, Authorization: headers.Authorization ? `Bearer ${token?.substring(0, 20)}...` : 'none' });
+  private buildHeaders(requireAuth: boolean, body?: BodyInit | null): HeadersInit {
+    const token = authSession.getAccessToken();
+    const headers: Record<string, string> = {};
+
+    if (!(body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
+
+    if (requireAuth && token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
     return headers;
   }
 
@@ -27,6 +33,10 @@ class ApiService {
     if (!response.ok) {
       const error = await response.text();
       throw new Error(error || `HTTP error! status: ${response.status}`);
+    }
+
+    if (response.status === 204) {
+      return undefined as T;
     }
     
     const contentType = response.headers.get('content-type');
@@ -36,42 +46,84 @@ class ApiService {
     return response.text() as T;
   }
 
-  async get<T>(endpoint: string, requireAuth: boolean = false): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'GET',
-      headers: requireAuth ? this.getAuthHeaders() : { 'Content-Type': 'application/json' }
-    });
-    
+  private async request<T>(
+    endpoint: string,
+    init: RequestInit,
+    options: { requireAuth?: boolean; retryOn401?: boolean; includeCredentials?: boolean } = {}
+  ): Promise<T> {
+    const requireAuth = options.requireAuth ?? false;
+    const retryOn401 = options.retryOn401 ?? requireAuth;
+    const includeCredentials = options.includeCredentials ?? true;
+    const body = init.body;
+
+    const execute = async (): Promise<Response> =>
+      fetch(`${this.baseUrl}${endpoint}`, {
+        ...init,
+        headers: this.buildHeaders(requireAuth, body),
+        credentials: includeCredentials ? 'include' : 'same-origin'
+      });
+
+    let response = await execute();
+
+    if (response.status === 401 && retryOn401) {
+      const refreshResponse = await authSession.refresh();
+
+      if (!refreshResponse) {
+        throw new Error('Unauthorized');
+      }
+
+      response = await execute();
+    }
+
     return this.handleResponse<T>(response);
   }
 
-  async post<T, U>(endpoint: string, data: U, requireAuth: boolean = false): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'POST',
-      headers: requireAuth ? this.getAuthHeaders() : { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    
-    return this.handleResponse<T>(response);
+  async get<T>(
+    endpoint: string,
+    options: boolean | { requireAuth?: boolean; retryOn401?: boolean; includeCredentials?: boolean } = false
+  ): Promise<T> {
+    const resolvedOptions = typeof options === 'boolean' ? { requireAuth: options } : options;
+    return this.request<T>(endpoint, { method: 'GET' }, resolvedOptions);
   }
 
-  async put<T, U>(endpoint: string, data: U, requireAuth: boolean = false): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'PUT',
-      headers: requireAuth ? this.getAuthHeaders() : { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-
-    return this.handleResponse<T>(response);
+  async post<T, U>(
+    endpoint: string,
+    data: U,
+    options: boolean | { requireAuth?: boolean; retryOn401?: boolean; includeCredentials?: boolean } = false
+  ): Promise<T> {
+    const resolvedOptions = typeof options === 'boolean' ? { requireAuth: options } : options;
+    return this.request<T>(
+      endpoint,
+      {
+        method: 'POST',
+        body: data === undefined ? undefined : JSON.stringify(data)
+      },
+      resolvedOptions
+    );
   }
 
-  async delete<T>(endpoint: string, requireAuth: boolean = false): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'DELETE',
-      headers: requireAuth ? this.getAuthHeaders() : { 'Content-Type': 'application/json' }
-    });
+  async put<T, U>(
+    endpoint: string,
+    data: U,
+    options: boolean | { requireAuth?: boolean; retryOn401?: boolean; includeCredentials?: boolean } = false
+  ): Promise<T> {
+    const resolvedOptions = typeof options === 'boolean' ? { requireAuth: options } : options;
+    return this.request<T>(
+      endpoint,
+      {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      },
+      resolvedOptions
+    );
+  }
 
-    return this.handleResponse<T>(response);
+  async delete<T>(
+    endpoint: string,
+    options: boolean | { requireAuth?: boolean; retryOn401?: boolean; includeCredentials?: boolean } = false
+  ): Promise<T> {
+    const resolvedOptions = typeof options === 'boolean' ? { requireAuth: options } : options;
+    return this.request<T>(endpoint, { method: 'DELETE' }, resolvedOptions);
   }
 }
 

@@ -14,7 +14,7 @@ interface RegisterModalProps {
 
 const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitchToLogin }) => {
   const dispatch = useAppDispatch();
-  const { loading, error, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { loading, error } = useAppSelector((state) => state.auth);
 
   const [formData, setFormData] = useState<RegisterRequest & { confirmPassword: string }>({
     userName: '',
@@ -24,14 +24,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
   });
 
   const [validationErrors, setValidationErrors] = useState<Partial<RegisterRequest & { confirmPassword: string }>>({});
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      onClose();
-      setFormData({ userName: '', email: '', password: '', confirmPassword: '' });
-      setValidationErrors({});
-    }
-  }, [isAuthenticated, onClose]);
 
   useEffect(() => {
     if (isOpen) {
@@ -80,7 +72,12 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
       email: formData.email,
       password: formData.password
     };
-    dispatch(registerUser(registerData));
+    const resultAction = await dispatch(registerUser(registerData));
+
+    if (registerUser.fulfilled.match(resultAction)) {
+      handleClose();
+      onSwitchToLogin();
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

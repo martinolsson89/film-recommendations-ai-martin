@@ -10,8 +10,13 @@ export interface RegisterRequest {
 }
 
 export interface AuthResponse {
-  token: string;
-  userId: string;
+  accessToken: string;
+  expiresAtUtc: string;
+  userName: string;
+}
+
+export interface RegisterResponse {
+  message: string;
 }
 
 export interface User {
